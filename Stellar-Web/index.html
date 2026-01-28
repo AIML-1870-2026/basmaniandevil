@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stellar Web</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+        }
+
+        #canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        .controls-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .controls-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .controls-panel {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 300px;
+            height: 100vh;
+            background: rgba(10, 10, 30, 0.9);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 80px 20px 20px;
+            z-index: 1000;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .controls-panel.open {
+            right: 0;
+        }
+
+        .controls-panel h2 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #88ccff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        .control-group label span {
+            float: right;
+            color: #88ccff;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, #88ccff, #4488cc);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(136, 204, 255, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, #88ccff, #4488cc);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(136, 204, 255, 0.5);
+        }
+
+        .stats-panel {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-panel h3 {
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            color: #88ccff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+        }
+
+        .stat-item .label {
+            color: #888;
+        }
+
+        .stat-item .value {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .instructions {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.75rem;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .instructions strong {
+            color: #88ccff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <button class="controls-toggle" id="toggleBtn">Controls</button>
+
+    <div class="controls-panel" id="controlsPanel">
+        <h2>Stellar Web</h2>
+
+        <div class="control-group">
+            <label>
+                Connectivity Radius
+                <span id="radiusValue">150</span>
+            </label>
+            <input type="range" id="radius" min="50" max="300" value="150">
+        </div>
+
+        <div class="control-group">
+            <label>
+                Number of Nodes
+                <span id="nodesValue">100</span>
+            </label>
+            <input type="range" id="nodes" min="20" max="300" value="100">
+        </div>
+
+        <div class="control-group">
+            <label>
+                Node Speed
+                <span id="speedValue">1.0</span>
+            </label>
+            <input type="range" id="speed" min="0.1" max="3" step="0.1" value="1">
+        </div>
+
+        <div class="control-group">
+            <label>
+                Edge Thickness
+                <span id="thicknessValue">1.5</span>
+            </label>
+            <input type="range" id="thickness" min="0.5" max="4" step="0.1" value="1.5">
+        </div>
+
+        <div class="control-group">
+            <label>
+                Edge Opacity
+                <span id="opacityValue">0.6</span>
+            </label>
+            <input type="range" id="opacity" min="0.1" max="1" step="0.05" value="0.6">
+        </div>
+
+        <div class="control-group">
+            <label>
+                Mouse Influence
+                <span id="mouseInfluenceValue">50</span>
+            </label>
+            <input type="range" id="mouseInfluence" min="0" max="150" value="50">
+        </div>
+
+        <div class="stats-panel">
+            <h3>Network Stats</h3>
+            <div class="stat-item">
+                <span class="label">Total Edges</span>
+                <span class="value" id="totalEdges">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="label">Avg Connections</span>
+                <span class="value" id="avgConnections">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="label">Network Density</span>
+                <span class="value" id="networkDensity">0%</span>
+            </div>
+            <div class="stat-item">
+                <span class="label">FPS</span>
+                <span class="value" id="fps">0</span>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <strong>Mouse Interaction:</strong> Move your cursor across the canvas to attract nearby nodes. Adjust the Mouse Influence slider to control the effect strength.
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration
+        let config = {
+            connectivityRadius: 150,
+            nodeCount: 100,
+            speed: 1,
+            edgeThickness: 1.5,
+            edgeOpacity: 0.6,
+            mouseInfluence: 50,
+            depthRange: 400,
+            focalLength: 300
+        };
+
+        // State
+        let nodes = [];
+        let mouse = { x: null, y: null };
+        let stats = { edges: 0, avgConnections: 0, density: 0 };
+        let lastTime = performance.now();
+        let frameCount = 0;
+        let fps = 0;
+
+        // Resize canvas
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        // Node class
+        class Node {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.z = Math.random() * config.depthRange;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.vz = (Math.random() - 0.5) * 0.3;
+                this.baseRadius = 2 + Math.random() * 2;
+                this.pulsePhase = Math.random() * Math.PI * 2;
+                this.pulseSpeed = 0.02 + Math.random() * 0.02;
+            }
+
+            update(deltaTime) {
+                const speedFactor = config.speed * deltaTime / 16;
+
+                // Update position
+                this.x += this.vx * speedFactor;
+                this.y += this.vy * speedFactor;
+                this.z += this.vz * speedFactor;
+
+                // Mouse interaction
+                if (mouse.x !== null && config.mouseInfluence > 0) {
+                    const dx = mouse.x - this.x;
+                    const dy = mouse.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 200 && dist > 0) {
+                        const force = (config.mouseInfluence / 1000) * (1 - dist / 200);
+                        this.vx += (dx / dist) * force;
+                        this.vy += (dy / dist) * force;
+                    }
+                }
+
+                // Apply damping
+                this.vx *= 0.99;
+                this.vy *= 0.99;
+                this.vz *= 0.99;
+
+                // Add slight random drift
+                this.vx += (Math.random() - 0.5) * 0.02;
+                this.vy += (Math.random() - 0.5) * 0.02;
+                this.vz += (Math.random() - 0.5) * 0.01;
+
+                // Boundary wrapping
+                if (this.x < -50) this.x = canvas.width + 50;
+                if (this.x > canvas.width + 50) this.x = -50;
+                if (this.y < -50) this.y = canvas.height + 50;
+                if (this.y > canvas.height + 50) this.y = -50;
+                if (this.z < 0) this.z = config.depthRange;
+                if (this.z > config.depthRange) this.z = 0;
+
+                // Update pulse
+                this.pulsePhase += this.pulseSpeed;
+            }
+
+            getProjected() {
+                const scale = config.focalLength / (config.focalLength + this.z);
+                const projX = canvas.width / 2 + (this.x - canvas.width / 2) * scale;
+                const projY = canvas.height / 2 + (this.y - canvas.height / 2) * scale;
+                const projRadius = this.baseRadius * scale;
+                const alpha = Math.max(0.2, Math.min(1, scale));
+                return { x: projX, y: projY, radius: projRadius, alpha, scale };
+            }
+
+            draw() {
+                const proj = this.getProjected();
+                const pulse = 1 + Math.sin(this.pulsePhase) * 0.2;
+                const radius = proj.radius * pulse;
+
+                // Glow effect
+                const gradient = ctx.createRadialGradient(
+                    proj.x, proj.y, 0,
+                    proj.x, proj.y, radius * 3
+                );
+                gradient.addColorStop(0, `rgba(200, 230, 255, ${proj.alpha})`);
+                gradient.addColorStop(0.3, `rgba(136, 180, 255, ${proj.alpha * 0.5})`);
+                gradient.addColorStop(1, 'rgba(136, 180, 255, 0)');
+
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, radius * 3, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                // Core
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${proj.alpha})`;
+                ctx.fill();
+            }
+        }
+
+        // Initialize nodes
+        function initNodes() {
+            nodes = [];
+            for (let i = 0; i < config.nodeCount; i++) {
+                nodes.push(new Node());
+            }
+        }
+
+        // Calculate 3D distance between two nodes
+        function getDistance(a, b) {
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            const dz = a.z - b.z;
+            return Math.sqrt(dx * dx + dy * dy + dz * dz);
+        }
+
+        // Draw edges
+        function drawEdges() {
+            let edgeCount = 0;
+            const connectionCounts = new Array(nodes.length).fill(0);
+
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dist = getDistance(nodes[i], nodes[j]);
+
+                    if (dist < config.connectivityRadius) {
+                        edgeCount++;
+                        connectionCounts[i]++;
+                        connectionCounts[j]++;
+
+                        const projA = nodes[i].getProjected();
+                        const projB = nodes[j].getProjected();
+
+                        // Calculate edge properties based on distance
+                        const distFactor = 1 - dist / config.connectivityRadius;
+                        const avgScale = (projA.scale + projB.scale) / 2;
+                        const thickness = config.edgeThickness * distFactor * avgScale;
+                        const alpha = config.edgeOpacity * distFactor * Math.min(projA.alpha, projB.alpha);
+
+                        // Color gradient based on edge length
+                        const hue = 200 + distFactor * 40; // Blue to cyan
+
+                        // Create gradient along edge
+                        const gradient = ctx.createLinearGradient(projA.x, projA.y, projB.x, projB.y);
+                        gradient.addColorStop(0, `hsla(${hue}, 70%, 70%, ${alpha * projA.alpha})`);
+                        gradient.addColorStop(0.5, `hsla(${hue + 20}, 80%, 80%, ${alpha})`);
+                        gradient.addColorStop(1, `hsla(${hue}, 70%, 70%, ${alpha * projB.alpha})`);
+
+                        ctx.beginPath();
+                        ctx.moveTo(projA.x, projA.y);
+                        ctx.lineTo(projB.x, projB.y);
+                        ctx.strokeStyle = gradient;
+                        ctx.lineWidth = thickness;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Update stats
+            stats.edges = edgeCount;
+            const totalConnections = connectionCounts.reduce((a, b) => a + b, 0);
+            stats.avgConnections = nodes.length > 0 ? (totalConnections / nodes.length).toFixed(1) : 0;
+            const maxEdges = (nodes.length * (nodes.length - 1)) / 2;
+            stats.density = maxEdges > 0 ? ((edgeCount / maxEdges) * 100).toFixed(1) : 0;
+        }
+
+        // Update stats display
+        function updateStatsDisplay() {
+            document.getElementById('totalEdges').textContent = stats.edges;
+            document.getElementById('avgConnections').textContent = stats.avgConnections;
+            document.getElementById('networkDensity').textContent = stats.density + '%';
+            document.getElementById('fps').textContent = fps;
+        }
+
+        // Main animation loop
+        function animate(currentTime) {
+            const deltaTime = currentTime - lastTime;
+
+            // FPS calculation
+            frameCount++;
+            if (currentTime - lastTime >= 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastTime = currentTime;
+                updateStatsDisplay();
+            }
+
+            // Clear canvas with fade effect
+            ctx.fillStyle = 'rgba(0, 0, 10, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Sort nodes by depth for proper rendering
+            nodes.sort((a, b) => b.z - a.z);
+
+            // Update and draw
+            nodes.forEach(node => node.update(deltaTime));
+            drawEdges();
+            nodes.forEach(node => node.draw());
+
+            requestAnimationFrame(animate);
+        }
+
+        // Event listeners
+        window.addEventListener('resize', resize);
+
+        canvas.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        // Controls panel toggle
+        const toggleBtn = document.getElementById('toggleBtn');
+        const controlsPanel = document.getElementById('controlsPanel');
+
+        toggleBtn.addEventListener('click', () => {
+            controlsPanel.classList.toggle('open');
+        });
+
+        // Slider controls
+        function setupSlider(id, configKey, displayId, parser = parseFloat, formatter = v => v) {
+            const slider = document.getElementById(id);
+            const display = document.getElementById(displayId);
+
+            slider.addEventListener('input', () => {
+                const value = parser(slider.value);
+                config[configKey] = value;
+                display.textContent = formatter(value);
+
+                // Special case: reinitialize nodes if count changes
+                if (configKey === 'nodeCount') {
+                    const diff = value - nodes.length;
+                    if (diff > 0) {
+                        for (let i = 0; i < diff; i++) {
+                            nodes.push(new Node());
+                        }
+                    } else if (diff < 0) {
+                        nodes.splice(value);
+                    }
+                }
+            });
+        }
+
+        setupSlider('radius', 'connectivityRadius', 'radiusValue', parseInt);
+        setupSlider('nodes', 'nodeCount', 'nodesValue', parseInt);
+        setupSlider('speed', 'speed', 'speedValue', parseFloat, v => v.toFixed(1));
+        setupSlider('thickness', 'edgeThickness', 'thicknessValue', parseFloat, v => v.toFixed(1));
+        setupSlider('opacity', 'edgeOpacity', 'opacityValue', parseFloat, v => v.toFixed(2));
+        setupSlider('mouseInfluence', 'mouseInfluence', 'mouseInfluenceValue', parseInt);
+
+        // Initialize
+        resize();
+        initNodes();
+
+        // Clear canvas initially
+        ctx.fillStyle = '#00000a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Start animation
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>

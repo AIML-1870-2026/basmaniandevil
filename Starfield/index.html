@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starfield Particle System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            background: radial-gradient(ellipse at center, #0a0a2e 0%, #000000 100%);
+        }
+
+        .controls {
+            width: 280px;
+            flex-shrink: 0;
+            background: #111;
+            padding: 25px;
+            color: white;
+            height: 100vh;
+            overflow-y: auto;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .controls h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+            text-align: center;
+            color: #4a9eff;
+            text-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
+        }
+
+        .control-group {
+            margin-bottom: 18px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #ccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-group .value {
+            color: #4a9eff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4a9eff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(74, 158, 255, 0.8);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4a9eff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(74, 158, 255, 0.8);
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background: rgba(74, 158, 255, 0.2);
+            color: #4a9eff;
+            border: 1px solid #4a9eff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: rgba(74, 158, 255, 0.3);
+            box-shadow: 0 0 15px rgba(74, 158, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-container">
+        <canvas id="starfield"></canvas>
+    </div>
+
+    <div class="controls">
+        <h2>Starfield Controls</h2>
+
+        <div class="control-group">
+            <label>
+                <span>Star Count</span>
+                <span class="value" id="countValue">300</span>
+            </label>
+            <input type="range" id="starCount" min="50" max="1000" value="300" step="50">
+        </div>
+
+        <div class="control-group">
+            <label>
+                <span>Speed</span>
+                <span class="value" id="speedValue">1</span>
+            </label>
+            <input type="range" id="speed" min="0.1" max="5" value="1" step="0.1">
+        </div>
+
+        <div class="control-group">
+            <label>
+                <span>Trail Length</span>
+                <span class="value" id="trailValue">5</span>
+            </label>
+            <input type="range" id="trailLength" min="1" max="15" value="5" step="1">
+        </div>
+
+        <div class="control-group">
+            <label>
+                <span>Star Size</span>
+                <span class="value" id="sizeValue">0.75</span>
+            </label>
+            <input type="range" id="starSize" min="0.25" max="5" value="0.75" step="0.25">
+        </div>
+
+        <div class="control-group">
+            <label>
+                <span>Brightness</span>
+                <span class="value" id="brightnessValue">80%</span>
+            </label>
+            <input type="range" id="brightness" min="20" max="100" value="80" step="5">
+        </div>
+
+        <button id="resetBtn">Reset to Defaults</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        const container = document.querySelector('.canvas-container');
+
+        // Set canvas size to container
+        function resizeCanvas() {
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        resizeCanvas();
+
+        // Particle system configuration
+        let config = {
+            starCount: 300,
+            speed: 1,
+            trailLength: 5,
+            starSize: 0.75,
+            brightness: 0.8
+        };
+
+        // Store default values
+        const defaults = { ...config };
+
+        // Particle class
+        class Star {
+            constructor(randomZ = true) {
+                this.reset(randomZ);
+            }
+
+            reset(randomZ = false) {
+                // Store original 3D position - stars spawn near center and spread outward
+                const angle = Math.random() * Math.PI * 2;
+                const spread = Math.random() * 200; // Small spread from center
+                this.originX = canvas.width / 2 + Math.cos(angle) * spread;
+                this.originY = canvas.height / 2 + Math.sin(angle) * spread;
+                this.z = randomZ ? Math.random() * canvas.width : canvas.width;
+                // 25% chance to be a little man
+                this.isMan = Math.random() < 0.25;
+                // Random spin speed and direction for men
+                this.spinSpeed = (Math.random() - 0.5) * 0.2;
+                this.rotation = Math.random() * Math.PI * 2;
+                // Arm and leg animation phase
+                this.limbPhase = Math.random() * Math.PI * 2;
+
+                // Calculate initial screen position
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const k = 128 / this.z;
+                this.x = (this.originX - centerX) * k + centerX;
+                this.y = (this.originY - centerY) * k + centerY;
+                this.prevX = this.x;
+                this.prevY = this.y;
+            }
+
+            update() {
+                this.prevX = this.x;
+                this.prevY = this.y;
+
+                // Stars move faster than people
+                const speedMultiplier = this.isMan ? 0.3 : 1;
+                this.z -= config.speed * speedMultiplier;
+
+                if (this.z <= 0) {
+                    this.reset();
+                }
+
+                // 3D to 2D projection using original spawn position
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+
+                const k = 128 / this.z;
+                this.x = (this.originX - centerX) * k + centerX;
+                this.y = (this.originY - centerY) * k + centerY;
+            }
+
+            draw() {
+                // Calculate size based on depth
+                const size = (1 - this.z / canvas.width) * config.starSize * 3;
+
+                // Calculate opacity based on depth
+                const opacity = Math.pow(1 - this.z / canvas.width, 2) * config.brightness;
+
+                // Draw trail
+                ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                ctx.lineWidth = size;
+                ctx.beginPath();
+                ctx.moveTo(this.prevX, this.prevY);
+                ctx.lineTo(this.x, this.y);
+                ctx.stroke();
+
+                if (this.isMan) {
+                    // Update rotation and limb animation
+                    this.rotation += this.spinSpeed;
+                    this.limbPhase += 0.15;
+
+                    // Draw a little spinning/flying stick man
+                    const manSize = size * 4;
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                    ctx.lineWidth = Math.max(1, size * 0.5);
+
+                    // Save context and apply rotation
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.rotation);
+
+                    // Animated arm wave (flying pose)
+                    const armWave = Math.sin(this.limbPhase) * 0.3;
+                    const legWave = Math.sin(this.limbPhase + Math.PI) * 0.2;
+
+                    // Head
+                    ctx.beginPath();
+                    ctx.arc(0, -manSize * 0.8, manSize * 0.3, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Body
+                    ctx.beginPath();
+                    ctx.moveTo(0, -manSize * 0.5);
+                    ctx.lineTo(0, manSize * 0.3);
+                    ctx.stroke();
+
+                    // Arms (waving up and down like flying)
+                    ctx.beginPath();
+                    ctx.moveTo(0, -manSize * 0.2);
+                    ctx.lineTo(-manSize * 0.5, -manSize * (0.4 + armWave));
+                    ctx.moveTo(0, -manSize * 0.2);
+                    ctx.lineTo(manSize * 0.5, -manSize * (0.4 - armWave));
+                    ctx.stroke();
+
+                    // Legs (kicking like swimming through space)
+                    ctx.beginPath();
+                    ctx.moveTo(0, manSize * 0.3);
+                    ctx.lineTo(-manSize * (0.3 + legWave), manSize * 0.8);
+                    ctx.moveTo(0, manSize * 0.3);
+                    ctx.lineTo(manSize * (0.3 - legWave), manSize * 0.8);
+                    ctx.stroke();
+
+                    ctx.restore();
+                } else {
+                    // Draw star point
+                    ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
+                    ctx.fill();
+
+                }
+            }
+        }
+
+        // Create stars array
+        let stars = [];
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < config.starCount; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            // Create trail effect by not completely clearing canvas
+            ctx.fillStyle = `rgba(0, 0, 0, ${1 / config.trailLength})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Continuously spawn new stars to maintain density
+            const spawnRate = Math.ceil(config.starCount / 100);
+            for (let i = 0; i < spawnRate; i++) {
+                if (stars.length < config.starCount * 1.5) {
+                    stars.push(new Star(false));
+                }
+            }
+
+            // Update and draw stars, remove those that go off screen
+            stars = stars.filter(star => {
+                star.update();
+                star.draw();
+                // Keep star if still in bounds and has positive z
+                return star.z > 0 &&
+                       star.x > -100 && star.x < canvas.width + 100 &&
+                       star.y > -100 && star.y < canvas.height + 100;
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            stars.forEach(star => star.reset());
+        });
+
+        // Control handlers
+        document.getElementById('starCount').addEventListener('input', (e) => {
+            config.starCount = parseInt(e.target.value);
+            document.getElementById('countValue').textContent = config.starCount;
+            initStars();
+        });
+
+        document.getElementById('speed').addEventListener('input', (e) => {
+            config.speed = parseFloat(e.target.value);
+            document.getElementById('speedValue').textContent = config.speed;
+        });
+
+        document.getElementById('trailLength').addEventListener('input', (e) => {
+            config.trailLength = parseInt(e.target.value);
+            document.getElementById('trailValue').textContent = config.trailLength;
+        });
+
+        document.getElementById('starSize').addEventListener('input', (e) => {
+            config.starSize = parseFloat(e.target.value);
+            document.getElementById('sizeValue').textContent = config.starSize;
+        });
+
+        document.getElementById('brightness').addEventListener('input', (e) => {
+            config.brightness = parseInt(e.target.value) / 100;
+            document.getElementById('brightnessValue').textContent = e.target.value + '%';
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            config = { ...defaults };
+            document.getElementById('starCount').value = defaults.starCount;
+            document.getElementById('speed').value = defaults.speed;
+            document.getElementById('trailLength').value = defaults.trailLength;
+            document.getElementById('starSize').value = defaults.starSize;
+            document.getElementById('brightness').value = defaults.brightness * 100;
+
+            document.getElementById('countValue').textContent = defaults.starCount;
+            document.getElementById('speedValue').textContent = defaults.speed;
+            document.getElementById('trailValue').textContent = defaults.trailLength;
+            document.getElementById('sizeValue').textContent = defaults.starSize;
+            document.getElementById('brightnessValue').textContent = (defaults.brightness * 100) + '%';
+
+            initStars();
+        });
+
+        // Initialize and start
+        initStars();
+        animate();
+    </script>
+</body>
+</html>

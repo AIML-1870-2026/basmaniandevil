@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basil Fulton</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #0a0a0a;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .name {
+            color: #ffffff;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            letter-spacing: 0.3em;
+        }
+
+        .hello-world {
+            font-size: 4rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            animation: flash 0.5s infinite alternate, pulse 2s ease-in-out infinite;
+            text-shadow:
+                0 0 10px #fff,
+                0 0 20px #fff,
+                0 0 30px #ff00de,
+                0 0 40px #ff00de,
+                0 0 50px #ff00de,
+                0 0 60px #ff00de;
+            color: #fff;
+        }
+
+        @keyframes flash {
+            0% {
+                opacity: 1;
+                text-shadow:
+                    0 0 10px #fff,
+                    0 0 20px #fff,
+                    0 0 30px #ff00de,
+                    0 0 40px #ff00de,
+                    0 0 50px #ff00de,
+                    0 0 60px #ff00de;
+            }
+            100% {
+                opacity: 0.7;
+                text-shadow:
+                    0 0 5px #fff,
+                    0 0 10px #00ffff,
+                    0 0 20px #00ffff,
+                    0 0 30px #00ffff;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .name {
+                font-size: 1.2rem;
+            }
+            .hello-world {
+                font-size: 2rem;
+            }
+        }
+
+        .runner {
+            position: fixed;
+            bottom: 20px;
+            left: -60px;
+            animation: run 6s linear infinite;
+        }
+
+        @keyframes run {
+            0% {
+                left: -60px;
+            }
+            100% {
+                left: 100vw;
+            }
+        }
+
+        .stickman {
+            position: relative;
+            width: 40px;
+            height: 60px;
+        }
+
+        .head {
+            position: absolute;
+            top: 0;
+            left: 12px;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+        }
+
+        .body {
+            position: absolute;
+            top: 16px;
+            left: 18px;
+            width: 4px;
+            height: 20px;
+            background: #fff;
+        }
+
+        .arm {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            width: 4px;
+            height: 16px;
+            background: #fff;
+            transform-origin: top center;
+        }
+
+        .arm.left {
+            animation: swingArmLeft 0.3s ease-in-out infinite alternate;
+        }
+
+        .arm.right {
+            animation: swingArmRight 0.3s ease-in-out infinite alternate;
+        }
+
+        .leg {
+            position: absolute;
+            top: 34px;
+            left: 18px;
+            width: 4px;
+            height: 20px;
+            background: #fff;
+            transform-origin: top center;
+        }
+
+        .leg.left {
+            animation: swingLegLeft 0.3s ease-in-out infinite alternate;
+        }
+
+        .leg.right {
+            animation: swingLegRight 0.3s ease-in-out infinite alternate;
+        }
+
+        @keyframes swingArmLeft {
+            0% { transform: rotate(-45deg); }
+            100% { transform: rotate(45deg); }
+        }
+
+        @keyframes swingArmRight {
+            0% { transform: rotate(45deg); }
+            100% { transform: rotate(-45deg); }
+        }
+
+        @keyframes swingLegLeft {
+            0% { transform: rotate(-30deg); }
+            100% { transform: rotate(30deg); }
+        }
+
+        @keyframes swingLegRight {
+            0% { transform: rotate(30deg); }
+            100% { transform: rotate(-30deg); }
+        }
+    </style>
+</head>
+<body>
+    <p class="name">Basil Fulton</p>
+    <h1 class="hello-world">Hello World</h1>
+    <div class="runner">
+        <div class="stickman">
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+            <div class="leg left"></div>
+            <div class="leg right"></div>
+        </div>
+    </div>
+</body>
+</html>
