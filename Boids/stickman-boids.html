@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Street Crowd Simulation</title>
+    <link rel="stylesheet" href="stickman-boids.css">
+</head>
+<body>
+    <div id="controls">
+        <h2>Street Crowd Simulation</h2>
+
+        <div class="control-group">
+            <label>Population <span class="value-display" id="populationVal">80</span></label>
+            <input type="range" id="population" min="1" max="300" value="80">
+        </div>
+
+        <div class="control-group">
+            <label>Max Speed <span class="value-display" id="maxSpeedVal">0.4</span></label>
+            <input type="range" id="maxSpeed" min="0.1" max="1.5" value="0.4" step="0.1">
+        </div>
+
+        <div class="control-group">
+            <label>Stickman Size <span class="value-display" id="sizeVal">5</span></label>
+            <input type="range" id="size" min="2" max="12" value="5" step="0.5">
+        </div>
+
+        <div class="control-group">
+            <label>Perception Radius <span class="value-display" id="perceptionVal">25</span></label>
+            <input type="range" id="perception" min="5" max="60" value="25">
+        </div>
+
+        <div class="control-group">
+            <label>Cars <span class="value-display" id="carCountVal">8</span></label>
+            <input type="range" id="carCount" min="0" max="20" value="8">
+        </div>
+
+        <div class="section-title">Behavior Weights</div>
+
+        <div class="control-group">
+            <label>Separation <span class="value-display" id="separationVal">2.0</span></label>
+            <input type="range" id="separation" min="0" max="5" value="2.0" step="0.1">
+        </div>
+
+        <div class="control-group">
+            <label>Alignment <span class="value-display" id="alignmentVal">0.8</span></label>
+            <input type="range" id="alignment" min="0" max="5" value="0.8" step="0.1">
+        </div>
+
+        <div class="control-group">
+            <label>Cohesion <span class="value-display" id="cohesionVal">0.5</span></label>
+            <input type="range" id="cohesion" min="0" max="5" value="0.5" step="0.1">
+        </div>
+
+        <div class="section-title">Camera Views</div>
+
+        <div class="button-group">
+            <button class="view-btn" id="viewTop">Top</button>
+            <button class="view-btn" id="viewStreet">Street</button>
+            <button class="view-btn" id="viewIso">Overview</button>
+        </div>
+
+        <div class="button-group">
+            <button id="pauseBtn">Pause</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+    </div>
+
+    <div id="info">Drag to rotate | Scroll to zoom | Right-drag to pan</div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module" src="stickman-boids.js?v=5"></script>
+</body>
+</html>
