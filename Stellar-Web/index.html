@@ -346,27 +346,42 @@
             draw() {
                 const proj = this.getProjected();
                 const pulse = 1 + Math.sin(this.pulsePhase) * 0.2;
-                const radius = proj.radius * pulse;
+                const size = proj.radius * pulse * 3; // scale factor for stickman
 
-                // Glow effect
-                const gradient = ctx.createRadialGradient(
-                    proj.x, proj.y, 0,
-                    proj.x, proj.y, radius * 3
-                );
-                gradient.addColorStop(0, `rgba(200, 230, 255, ${proj.alpha})`);
-                gradient.addColorStop(0.3, `rgba(136, 180, 255, ${proj.alpha * 0.5})`);
-                gradient.addColorStop(1, 'rgba(136, 180, 255, 0)');
+                const x = proj.x;
+                const y = proj.y;
+                const alpha = proj.alpha;
 
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.lineWidth = Math.max(0.5, size * 0.15);
+                ctx.lineCap = 'round';
+
+                // Head
+                const headRadius = size * 0.25;
                 ctx.beginPath();
-                ctx.arc(proj.x, proj.y, radius * 3, 0, Math.PI * 2);
-                ctx.fillStyle = gradient;
+                ctx.arc(x, y - size * 0.75, headRadius, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Core
+                // Body
                 ctx.beginPath();
-                ctx.arc(proj.x, proj.y, radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${proj.alpha})`;
-                ctx.fill();
+                ctx.moveTo(x, y - size * 0.5);
+                ctx.lineTo(x, y + size * 0.2);
+                ctx.stroke();
+
+                // Arms
+                ctx.beginPath();
+                ctx.moveTo(x - size * 0.4, y - size * 0.15);
+                ctx.lineTo(x, y - size * 0.3);
+                ctx.lineTo(x + size * 0.4, y - size * 0.15);
+                ctx.stroke();
+
+                // Legs
+                ctx.beginPath();
+                ctx.moveTo(x - size * 0.35, y + size * 0.7);
+                ctx.lineTo(x, y + size * 0.2);
+                ctx.lineTo(x + size * 0.35, y + size * 0.7);
+                ctx.stroke();
             }
         }
 
