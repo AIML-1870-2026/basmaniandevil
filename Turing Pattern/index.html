@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turing Patterns Explorer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Turing Patterns Explorer</h1>
+    <p class="subtitle">Interactive Gray-Scott Reaction-Diffusion Simulator</p>
+  </header>
+
+  <main>
+    <aside class="controls-panel">
+      <section class="control-group">
+        <h3>Presets</h3>
+        <div class="preset-buttons">
+          <button class="preset-btn" data-f="0.0545" data-k="0.062" title="Organic dot patterns like leopard spots">Spots</button>
+          <button class="preset-btn" data-f="0.035" data-k="0.065" title="Linear patterns like zebra stripes">Stripes</button>
+          <button class="preset-btn" data-f="0.014" data-k="0.054" title="Propagating wave fronts">Waves</button>
+          <button class="preset-btn" data-f="0.029" data-k="0.057" title="Labyrinthine maze-like structures">Maze</button>
+          <button class="preset-btn" data-f="0.018" data-k="0.051" title="Rotating spiral formations">Spirals</button>
+        </div>
+      </section>
+
+      <section class="control-group">
+        <h3>Parameters</h3>
+        <label>
+          Feed Rate (F): <span id="f-value">0.0545</span>
+          <input type="range" id="f-slider" min="0.01" max="0.10" step="0.0005" value="0.0545">
+        </label>
+        <label>
+          Kill Rate (K): <span id="k-value">0.062</span>
+          <input type="range" id="k-slider" min="0.04" max="0.07" step="0.0005" value="0.062">
+        </label>
+      </section>
+
+      <section class="control-group">
+        <h3>Simulation</h3>
+        <div class="sim-buttons">
+          <button id="pause-btn">Pause</button>
+          <button id="reset-btn">Reset</button>
+          <button id="clear-btn">Clear</button>
+        </div>
+        <label>
+          Speed:
+          <select id="speed-select">
+            <option value="1">Slow</option>
+            <option value="3" selected>Normal</option>
+            <option value="10">Fast</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="control-group">
+        <h3>Drawing</h3>
+        <div class="draw-toggle">
+          <button id="draw-a-btn" class="active" title="Activator (Chemical A)">Activator (A)</button>
+          <button id="draw-b-btn" title="Inhibitor (Chemical B)">Inhibitor (B)</button>
+        </div>
+        <label>
+          Brush Size: <span id="brush-value">10</span>
+          <input type="range" id="brush-slider" min="2" max="40" value="10">
+        </label>
+      </section>
+
+      <section class="control-group">
+        <h3>Color Scheme</h3>
+        <div class="color-buttons">
+          <button class="color-btn active" data-scheme="classic">Classic</button>
+          <button class="color-btn" data-scheme="viridis">Viridis</button>
+          <button class="color-btn" data-scheme="heat">Heat</button>
+          <button class="color-btn" data-scheme="ocean">Ocean</button>
+        </div>
+      </section>
+
+      <section class="control-group">
+        <button id="save-btn" class="save-button">Save Image (PNG)</button>
+      </section>
+    </aside>
+
+    <div class="canvas-area">
+      <canvas id="sim-canvas"></canvas>
+      <div class="canvas-overlay" id="canvas-overlay"></div>
+    </div>
+  </main>
+
+  <section class="param-space-section">
+    <h3>Parameter Space <span class="hint">(click to explore)</span></h3>
+    <div class="param-space-wrapper">
+      <canvas id="param-canvas" width="600" height="200"></canvas>
+      <div class="param-marker" id="param-marker"></div>
+      <div class="param-labels">
+        <span class="axis-label x-label">Feed Rate (F) &rarr;</span>
+        <span class="axis-label y-label">&uarr; Kill Rate (K)</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="info-panel">
+    <button class="info-toggle" id="info-toggle">About Turing Patterns <span class="arrow">&#9660;</span></button>
+    <div class="info-content" id="info-content">
+      <p><strong>Turing patterns</strong> are self-organizing spatial patterns that arise from the interaction of two diffusing chemicals &mdash; an <em>activator</em> and an <em>inhibitor</em>. First described by Alan Turing in 1952, these patterns explain natural phenomena like animal markings, coral structures, and sand ripples.</p>
+      <p>This simulator uses the <strong>Gray-Scott model</strong>:</p>
+      <ul>
+        <li><strong>Feed Rate (F)</strong> &mdash; how quickly the activator is replenished. Higher values push toward uniform states.</li>
+        <li><strong>Kill Rate (K)</strong> &mdash; how quickly the inhibitor is removed. Balances against the feed rate to create patterns.</li>
+      </ul>
+      <p><strong>How to interact:</strong> Click or drag on the canvas to disturb the chemicals. Adjust sliders or click on the parameter space diagram to explore different pattern regimes. Try the presets for classic examples!</p>
+    </div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
