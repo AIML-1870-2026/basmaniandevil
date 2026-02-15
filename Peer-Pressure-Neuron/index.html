@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Peer Pressure Decision Neuron</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <h1>Peer Pressure Decision Neuron</h1>
+  <p>A single artificial neuron that helps you think through peer pressure decisions</p>
+</header>
+
+<div class="app-container">
+
+  <!-- Scenario Box -->
+  <div class="panel scenario-box">
+    <textarea class="scenario-input" id="scenarioInput"
+      placeholder="Describe the situation... (e.g., 'My friends want to skip class and go to the beach')"></textarea>
+  </div>
+
+  <!-- LEFT COLUMN: Inputs + Output -->
+  <div class="left-col">
+
+    <!-- Input Sliders -->
+    <div class="panel" id="inputsPanel">
+      <div class="panel-title">Input Factors</div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span class="slider-label-text">How fun will this be? <span aria-hidden="true">&#127881;</span></span>
+          <span class="slider-value" id="funVal">5.0</span>
+        </div>
+        <div class="slider-desc">How enjoyable or exciting is this?</div>
+        <input type="range" id="funSlider" min="0" max="10" step="0.1" value="5" aria-label="Fun Factor">
+        <div class="slider-weight">Weight: <span class="positive">+0.30</span></div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span class="slider-label-text">How dangerous is this? <span aria-hidden="true">&#9888;&#65039;</span></span>
+          <span class="slider-value" id="dangerVal">5.0</span>
+        </div>
+        <div class="slider-desc">Physical risk or safety concerns</div>
+        <input type="range" id="dangerSlider" min="0" max="10" step="0.1" value="5" aria-label="Danger Level">
+        <div class="slider-weight">Weight: <span class="negative">-0.50</span></div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span class="slider-label-text">How likely to get in trouble? <span aria-hidden="true">&#128680;</span></span>
+          <span class="slider-value" id="troubleVal">5.0</span>
+        </div>
+        <div class="slider-desc">Risk of consequences from parents, school, etc.</div>
+        <input type="range" id="troubleSlider" min="0" max="10" step="0.1" value="5" aria-label="Trouble Risk">
+        <div class="slider-weight">Weight: <span class="negative">-0.40</span></div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span class="slider-label-text">Any long-term benefits? <span aria-hidden="true">&#127775;</span></span>
+          <span class="slider-value" id="benefitVal">5.0</span>
+        </div>
+        <div class="slider-desc">Will this help you in the future?</div>
+        <input type="range" id="benefitSlider" min="0" max="10" step="0.1" value="5" aria-label="Long-term Benefit">
+        <div class="slider-weight">Weight: <span class="positive">+0.20</span></div>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-label">
+          <span class="slider-label-text">How strong is peer pressure? <span aria-hidden="true">&#128101;</span></span>
+          <span class="slider-value" id="pressureVal">5.0</span>
+        </div>
+        <div class="slider-desc">How much are friends pushing you to do this?</div>
+        <input type="range" id="pressureSlider" min="0" max="10" step="0.1" value="5" aria-label="Peer Pressure Intensity">
+        <div class="slider-weight">Weight: <span class="positive">+0.10</span></div>
+      </div>
+
+      <div class="slider-group" style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+        <div class="slider-label">
+          <span class="slider-label-text">Your Risk Tolerance <span aria-hidden="true">&#127922;</span></span>
+          <span class="slider-value" id="biasVal">0.0</span>
+        </div>
+        <div class="slider-desc">Negative = cautious / Positive = adventurous</div>
+        <input type="range" id="biasSlider" min="-5" max="5" step="0.1" value="0" aria-label="Risk Tolerance (Bias)">
+      </div>
+    </div>
+
+    <!-- Decision Output -->
+    <div class="panel" style="margin-top: 20px;">
+      <div class="panel-title">Neuron Output</div>
+      <div class="decision-output do-it" id="decisionOutput">
+        <div class="decision-text" id="decisionText">DO IT</div>
+        <div class="decision-confidence" id="decisionConfidence">50.0% confidence</div>
+        <div class="confidence-label" id="confidenceLabel">Uncertain</div>
+      </div>
+      <div class="math-breakdown" id="mathBreakdown"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN: Visualization + Training -->
+  <div class="right-col">
+
+    <!-- Visualization -->
+    <div class="panel viz-container">
+      <div class="panel-title">Decision Boundary (Fun vs Danger)</div>
+      <div class="canvas-wrapper">
+        <canvas id="vizCanvas"></canvas>
+        <div class="canvas-tooltip" id="canvasTooltip"></div>
+      </div>
+
+      <!-- Label Mode -->
+      <div class="label-mode-info" id="labelModeInfo">Click the plot to add training points. Select a label mode first.</div>
+
+      <!-- Training Controls -->
+      <div class="training-controls">
+        <button class="btn btn-green" id="btnLabelDoIt">Label: DO IT</button>
+        <button class="btn btn-red" id="btnLabelPass">Label: PASS</button>
+        <button class="btn btn-blue" id="btnStep">Step</button>
+        <button class="btn btn-orange" id="btnTrain">Train (100)</button>
+        <button class="btn" id="btnReset">Reset</button>
+        <button class="btn btn-purple" id="btnLoadExamples">Load Examples</button>
+      </div>
+
+      <div class="train-progress" id="trainProgress" style="display:none;">
+        <span id="trainProgressText">Training...</span>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="trainProgressBar"></div></div>
+      </div>
+    </div>
+
+    <!-- Training Stats -->
+    <div class="panel" style="margin-top: 20px;">
+      <div class="panel-title">Training Metrics</div>
+
+      <div class="training-stats">
+        <div class="stat-card">
+          <div class="stat-label">Step</div>
+          <div class="stat-value" id="statStep">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Accuracy</div>
+          <div class="stat-value" id="statAccuracy">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Loss (BCE)</div>
+          <div class="stat-value" id="statLoss">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Points</div>
+          <div class="stat-value" id="statPoints">0</div>
+        </div>
+      </div>
+
+      <div class="panel-title" style="margin-top: 10px;">Current Weights</div>
+      <div class="weights-display" id="weightsDisplay"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Confirm Dialog -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-dialog">
+    <p>Are you sure? This will erase all points and reset weights.</p>
+    <div class="confirm-buttons">
+      <button class="btn btn-red" id="confirmYes">Yes, Reset</button>
+      <button class="btn" id="confirmNo">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>
