@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎨 RGB Color Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1 class="app-title">🎨 RGB Color Studio</h1>
+      <p class="app-subtitle">Mix colors like a scientist, play like an artist</p>
+    </header>
+
+    <main class="studio">
+
+      <!-- ── Left Panel: Mixing Bowl Explorer ─────────────────────────── -->
+      <section class="panel mixing-panel">
+        <h2 class="panel-title">Mixing Bowl Explorer</h2>
+
+        <!-- Bowl + Streams -->
+        <div class="bowl-area">
+          <div class="streams-wrapper">
+            <div class="stream" id="stream-r" style="--stream-color: #e53e3e"></div>
+            <div class="stream" id="stream-g" style="--stream-color: #38a169"></div>
+            <div class="stream" id="stream-b" style="--stream-color: #3182ce"></div>
+          </div>
+
+          <div class="bowl-container">
+            <div class="bowl-rim"></div>
+            <div class="bowl-body">
+              <div class="bowl-fill" id="bowl-fill">
+                <div class="bowl-wave"></div>
+              </div>
+              <div class="bowl-shine"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sliders (R, G, B) -->
+        <div class="sliders-area">
+          <div class="slider-group">
+            <span class="slider-letter" style="color:#e53e3e">R</span>
+            <div class="slider-track">
+              <input
+                type="range"
+                id="slider-r"
+                class="slider slider-r"
+                min="0"
+                max="255"
+                value="255"
+              />
+            </div>
+            <span class="slider-value" id="val-r">255</span>
+          </div>
+
+          <div class="slider-group">
+            <span class="slider-letter" style="color:#38a169">G</span>
+            <div class="slider-track">
+              <input
+                type="range"
+                id="slider-g"
+                class="slider slider-g"
+                min="0"
+                max="255"
+                value="100"
+              />
+            </div>
+            <span class="slider-value" id="val-g">100</span>
+          </div>
+
+          <div class="slider-group">
+            <span class="slider-letter" style="color:#3182ce">B</span>
+            <div class="slider-track">
+              <input
+                type="range"
+                id="slider-b"
+                class="slider slider-b"
+                min="0"
+                max="255"
+                value="50"
+              />
+            </div>
+            <span class="slider-value" id="val-b">50</span>
+          </div>
+        </div>
+
+        <!-- Color Readout -->
+        <div class="color-readout">
+          <div class="readout-swatch" id="readout-swatch"></div>
+          <div class="readout-info">
+            <span class="readout-name" id="readout-name">Orange</span>
+            <span class="readout-hex" id="readout-hex">#FF6432</span>
+            <span class="readout-rgb" id="readout-rgb">rgb(255, 100, 50)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Right Panel: Palette Generator ───────────────────────────── -->
+      <section class="panel palette-panel">
+        <h2 class="panel-title">Palette Generator</h2>
+
+        <!-- Base color preview -->
+        <div class="base-preview">
+          <div class="base-swatch" id="base-swatch"></div>
+          <span class="base-label">Current color</span>
+        </div>
+
+        <!-- Harmony mode toggles -->
+        <div class="harmony-toggles">
+          <button class="harmony-btn active" data-mode="complementary">Complementary</button>
+          <button class="harmony-btn" data-mode="analogous">Analogous</button>
+          <button class="harmony-btn" data-mode="triadic">Triadic</button>
+          <button class="harmony-btn" data-mode="split-complementary">Split-Comp</button>
+        </div>
+
+        <!-- Generated palette swatches -->
+        <div class="palette-swatches" id="palette-swatches"></div>
+
+        <!-- Randomize -->
+        <div class="palette-actions">
+          <button class="randomize-btn" id="randomize-btn">
+            <span class="dice-icon">🎲</span>
+            Randomize
+          </button>
+        </div>
+
+        <!-- Color Blindness Simulator -->
+        <details class="cb-section">
+          <summary class="cb-summary">👁 How others see this palette</summary>
+          <div class="cb-content">
+            <div class="cb-toggles">
+              <button class="cb-btn active" data-vision="normal">Normal</button>
+              <button class="cb-btn" data-vision="protanopia">Protanopia</button>
+              <button class="cb-btn" data-vision="deuteranopia">Deuteranopia</button>
+              <button class="cb-btn" data-vision="tritanopia">Tritanopia</button>
+            </div>
+
+            <div class="palette-swatches cb-palette" id="cb-palette"></div>
+
+            <div class="cb-legend">
+              <p class="legend-item"><strong>Protanopia</strong> — reduced sensitivity to red wavelengths</p>
+              <p class="legend-item"><strong>Deuteranopia</strong> — reduced sensitivity to green wavelengths</p>
+              <p class="legend-item"><strong>Tritanopia</strong> — reduced sensitivity to blue wavelengths</p>
+            </div>
+          </div>
+        </details>
+      </section>
+    </main>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast">Copied!</div>
+
+    <script src="main.js"></script>
+  </body>
+</html>
