@@ -1,0 +1,510 @@
+/* ============================================================
+   Readable Explorer — Styles
+   Dark DevTools-style theme
+   ============================================================ */
+
+/* Reset & base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   App layout — two-column, full height
+   ============================================================ */
+.app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ============================================================
+   Left Panel — Preview
+   ============================================================ */
+.preview-panel {
+  flex: 0 0 60%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  background: #ffffff;
+  transition: background-color 80ms ease;
+}
+
+.preview-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  padding: 28px 36px;
+  gap: 8px;
+}
+
+.sample-block {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sample-label {
+  display: inline-block;
+  font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: #b0b0b0;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 2px 7px;
+  border-radius: 3px;
+  width: fit-content;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  line-height: 1.6;
+  /* Never change — always readable */
+  pointer-events: none;
+  user-select: none;
+}
+
+.sample-text {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.25;
+  color: #000000;
+  transition: color 80ms ease, font-size 80ms ease;
+}
+
+/* ============================================================
+   Right Panel — Controls
+   ============================================================ */
+.controls-panel {
+  flex: 0 0 40%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #2a2a2a;
+  border-left: 1px solid #3a3a3a;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollbar */
+.controls-panel::-webkit-scrollbar {
+  width: 5px;
+}
+.controls-panel::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+.controls-panel::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
+.controls-panel::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* ============================================================
+   Sections
+   ============================================================ */
+.section {
+  padding: 16px 20px;
+  border-bottom: 1px solid #3a3a3a;
+  flex-shrink: 0;
+}
+
+.section:last-child {
+  border-bottom: none;
+  padding-bottom: 24px;
+}
+
+.section-header {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: #888888;
+  text-transform: uppercase;
+  margin-bottom: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ============================================================
+   Color Swatch (small preview next to section headers)
+   ============================================================ */
+.color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3);
+  transition: background-color 80ms ease;
+}
+
+/* ============================================================
+   Section 1 — WCAG Compliance
+   ============================================================ */
+.wcag-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.badge-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge-type {
+  font-size: 11px;
+  font-weight: 500;
+  color: #c8c8c8;
+  letter-spacing: 0.04em;
+}
+
+.badge-threshold {
+  font-size: 11px;
+  color: #666;
+}
+
+.badge-result {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 4px 12px;
+  border-radius: 4px;
+  min-width: 78px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.badge-result.pass {
+  background: #2d6a30;
+  color: #81c784;
+  border: 1px solid #4caf50;
+}
+
+.badge-result.fail {
+  background: #6a2222;
+  color: #ef9a9a;
+  border: 1px solid #f44336;
+}
+
+/* ============================================================
+   Section 2 — Contrast & Luminance Metrics
+   ============================================================ */
+.metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+}
+
+.metric-label {
+  color: #888888;
+}
+
+.metric-value {
+  color: #4fc3f7;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   Sections 3 & 4 — Color Controls (shared)
+   ============================================================ */
+.color-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.channel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.channel-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #888888;
+  width: 14px;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Range sliders */
+.channel-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, #4fc3f7 0%, #4fc3f7 100%, #3a3a3a 100%);
+  outline: none;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.channel-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #4fc3f7;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.25);
+  transition: box-shadow 0.15s;
+}
+
+.channel-slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 4px rgba(79, 195, 247, 0.3);
+}
+
+.channel-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #4fc3f7;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.25);
+}
+
+.channel-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #3a3a3a;
+}
+
+.channel-slider:focus-visible {
+  outline: 2px solid #4fc3f7;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.channel-slider:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.channel-slider:disabled::-webkit-slider-thumb {
+  cursor: not-allowed;
+}
+
+/* Number inputs */
+.channel-input {
+  width: 50px;
+  background: #333333;
+  border: 1px solid #3a3a3a;
+  color: #d4d4d4;
+  font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  text-align: right;
+  outline: none;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+
+.channel-input::-webkit-outer-spin-button,
+.channel-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.channel-input:focus {
+  border-color: #4fc3f7;
+  background: #3a3a3a;
+}
+
+.channel-input:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Disabled state for entire color section */
+.section.color-disabled .color-controls {
+  pointer-events: none;
+}
+
+/* ============================================================
+   Section 5 — Text Size
+   ============================================================ */
+.size-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unit-label {
+  font-size: 11px;
+  color: #666;
+  flex-shrink: 0;
+  min-width: 16px;
+}
+
+/* ============================================================
+   Section 5b — Sample Text input
+   ============================================================ */
+.sample-text-input {
+  width: 100%;
+  background: #333333;
+  border: 1px solid #3a3a3a;
+  border-radius: 5px;
+  color: #d4d4d4;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.sample-text-input:focus {
+  border-color: #4fc3f7;
+  background: #3a3a3a;
+}
+
+/* ============================================================
+   Section 6 — Presets
+   ============================================================ */
+.presets-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.preset-btn {
+  background: #333333;
+  border: 1px solid #3a3a3a;
+  border-radius: 7px;
+  padding: 10px 8px 8px;
+  cursor: pointer;
+  color: #b0b0b0;
+  font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.preset-btn:hover {
+  border-color: #4fc3f7;
+  background: #3a3a3a;
+  color: #d4d4d4;
+}
+
+.preset-btn:focus-visible {
+  outline: 2px solid #4fc3f7;
+  outline-offset: 2px;
+}
+
+.preset-btn:active {
+  background: #404040;
+}
+
+/* Diagonal split swatch */
+.preset-swatch {
+  width: 38px;
+  height: 38px;
+  border-radius: 5px;
+  background: linear-gradient(135deg, var(--bg) 50%, var(--fg) 50%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Section 7 — Vision Simulation
+   ============================================================ */
+.vision-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vision-pill {
+  cursor: pointer;
+}
+
+.vision-pill input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.vision-pill span {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1px solid #3a3a3a;
+  background: #333333;
+  color: #888888;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  user-select: none;
+  line-height: 1.4;
+}
+
+.vision-pill:hover span {
+  border-color: #4fc3f7;
+  color: #c8c8c8;
+}
+
+.vision-pill input[type="radio"]:checked + span {
+  background: #1a4f66;
+  border-color: #4fc3f7;
+  color: #4fc3f7;
+  font-weight: 500;
+}
+
+.vision-pill input[type="radio"]:focus-visible + span {
+  outline: 2px solid #4fc3f7;
+  outline-offset: 2px;
+}
+
+.vision-note {
+  margin-top: 10px;
+  font-size: 10px;
+  color: #888888;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}

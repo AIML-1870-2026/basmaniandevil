@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Readable Explorer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Hidden SVG filter definitions for vision simulation -->
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;">
+    <defs>
+      <filter id="vision-filter" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix" id="vision-matrix"
+          values="1 0 0 0 0
+                  0 1 0 0 0
+                  0 0 1 0 0
+                  0 0 0 1 0"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <div class="app">
+
+    <!-- ═══════════════════════════════════════════
+         LEFT PANEL — Preview
+    ═══════════════════════════════════════════ -->
+    <div class="preview-panel" id="preview-panel">
+      <div class="preview-content">
+
+        <div class="sample-block">
+          <span class="sample-label">12px / 9pt — Normal text</span>
+          <div class="sample-text" style="font-size:12px">The quick brown fox jumps over the lazy dog.</div>
+        </div>
+
+        <div class="sample-block">
+          <span class="sample-label">16px / 12pt — Normal text</span>
+          <div class="sample-text" style="font-size:16px">The quick brown fox jumps over the lazy dog.</div>
+        </div>
+
+        <div class="sample-block">
+          <span class="sample-label">24px / 18pt — Large text threshold</span>
+          <div class="sample-text" style="font-size:24px">The quick brown fox jumps over the lazy dog.</div>
+        </div>
+
+        <div class="sample-block">
+          <span class="sample-label">32px / 24pt — Large text</span>
+          <div class="sample-text" style="font-size:32px">The quick brown fox jumps over the lazy dog.</div>
+        </div>
+
+        <div class="sample-block">
+          <span class="sample-label">48px / 36pt — Large text</span>
+          <div class="sample-text" style="font-size:48px">The quick brown fox jumps over the lazy dog.</div>
+        </div>
+
+        <div class="sample-block">
+          <span class="sample-label" id="custom-label">24px / custom</span>
+          <div class="sample-text" id="custom-text" style="font-size:24px">The quick brown fox jumps over the lazy dog.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         RIGHT PANEL — Controls
+    ═══════════════════════════════════════════ -->
+    <div class="controls-panel">
+
+      <!-- Section 1: WCAG Compliance -->
+      <div class="section">
+        <div class="section-header">WCAG COMPLIANCE</div>
+        <div class="wcag-badges">
+          <div class="badge-row">
+            <div class="badge-label">
+              <span class="badge-type">NORMAL TEXT</span>
+              <span class="badge-threshold">≥ 4.5:1</span>
+            </div>
+            <div class="badge-result pass" id="normal-badge">✓ PASS</div>
+          </div>
+          <div class="badge-row">
+            <div class="badge-label">
+              <span class="badge-type">LARGE TEXT</span>
+              <span class="badge-threshold">≥ 3:1</span>
+            </div>
+            <div class="badge-result pass" id="large-badge">✓ PASS</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Contrast & Luminance -->
+      <div class="section">
+        <div class="section-header">CONTRAST</div>
+        <div class="metrics">
+          <div class="metric-row">
+            <span class="metric-label">Contrast Ratio</span>
+            <span class="metric-value" id="contrast-ratio">21.00 : 1</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Background Lum.</span>
+            <span class="metric-value" id="bg-luminance">1.0000</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Text Lum.</span>
+            <span class="metric-value" id="text-luminance">0.0000</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Background Color -->
+      <div class="section" id="bg-color-section">
+        <div class="section-header">
+          BACKGROUND COLOR
+          <div class="color-swatch" id="bg-swatch" style="background:#ffffff"></div>
+        </div>
+        <div class="color-controls">
+          <div class="channel-row">
+            <label class="channel-label" for="bg-r">R</label>
+            <input type="range" id="bg-r" class="channel-slider" min="0" max="255" value="255"
+              aria-label="Background red channel">
+            <input type="number" id="bg-r-num" class="channel-input" min="0" max="255" value="255">
+          </div>
+          <div class="channel-row">
+            <label class="channel-label" for="bg-g">G</label>
+            <input type="range" id="bg-g" class="channel-slider" min="0" max="255" value="255"
+              aria-label="Background green channel">
+            <input type="number" id="bg-g-num" class="channel-input" min="0" max="255" value="255">
+          </div>
+          <div class="channel-row">
+            <label class="channel-label" for="bg-b">B</label>
+            <input type="range" id="bg-b" class="channel-slider" min="0" max="255" value="255"
+              aria-label="Background blue channel">
+            <input type="number" id="bg-b-num" class="channel-input" min="0" max="255" value="255">
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Text Color -->
+      <div class="section" id="text-color-section">
+        <div class="section-header">
+          TEXT COLOR
+          <div class="color-swatch" id="text-swatch" style="background:#000000"></div>
+        </div>
+        <div class="color-controls">
+          <div class="channel-row">
+            <label class="channel-label" for="text-r">R</label>
+            <input type="range" id="text-r" class="channel-slider" min="0" max="255" value="0"
+              aria-label="Text red channel">
+            <input type="number" id="text-r-num" class="channel-input" min="0" max="255" value="0">
+          </div>
+          <div class="channel-row">
+            <label class="channel-label" for="text-g">G</label>
+            <input type="range" id="text-g" class="channel-slider" min="0" max="255" value="0"
+              aria-label="Text green channel">
+            <input type="number" id="text-g-num" class="channel-input" min="0" max="255" value="0">
+          </div>
+          <div class="channel-row">
+            <label class="channel-label" for="text-b">B</label>
+            <input type="range" id="text-b" class="channel-slider" min="0" max="255" value="0"
+              aria-label="Text blue channel">
+            <input type="number" id="text-b-num" class="channel-input" min="0" max="255" value="0">
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5: Text Size -->
+      <div class="section">
+        <div class="section-header">TEXT SIZE</div>
+        <div class="size-control">
+          <label class="channel-label" for="text-size">Size</label>
+          <input type="range" id="text-size" class="channel-slider" min="8" max="72" value="24"
+            aria-label="Custom text size">
+          <input type="number" id="text-size-num" class="channel-input" min="8" max="72" value="24">
+          <span class="unit-label">px</span>
+        </div>
+      </div>
+
+      <!-- Section 5b: Sample Text -->
+      <div class="section">
+        <div class="section-header">SAMPLE TEXT</div>
+        <textarea id="sample-text-input" class="sample-text-input"
+          aria-label="Sample text displayed in the preview"
+          rows="3" spellcheck="false">The quick brown fox jumps over the lazy dog.</textarea>
+      </div>
+
+      <!-- Section 6: Presets -->
+      <div class="section">
+        <div class="section-header">PRESETS</div>
+        <div class="presets-grid">
+          <button class="preset-btn" data-bg="#ffffff" data-text="#000000" aria-label="Apply Black on White preset">
+            <div class="preset-swatch" style="--bg:#ffffff;--fg:#000000"></div>
+            <span>Black on White</span>
+          </button>
+          <button class="preset-btn" data-bg="#000000" data-text="#ffffff" aria-label="Apply White on Black preset">
+            <div class="preset-swatch" style="--bg:#000000;--fg:#ffffff"></div>
+            <span>White on Black</span>
+          </button>
+          <button class="preset-btn" data-bg="#fdf6e3" data-text="#1a1a4e" aria-label="Apply Navy on Cream preset">
+            <div class="preset-swatch" style="--bg:#fdf6e3;--fg:#1a1a4e"></div>
+            <span>Navy on Cream</span>
+          </button>
+          <button class="preset-btn" data-bg="#000000" data-text="#ffff00" aria-label="Apply Yellow on Black preset">
+            <div class="preset-swatch" style="--bg:#000000;--fg:#ffff00"></div>
+            <span>Yellow on Black</span>
+          </button>
+          <button class="preset-btn" data-bg="#ffffff" data-text="#767676" aria-label="Apply Gray on White preset">
+            <div class="preset-swatch" style="--bg:#ffffff;--fg:#767676"></div>
+            <span>Gray on White</span>
+          </button>
+          <button class="preset-btn" data-bg="#008080" data-text="#1a1a1a" aria-label="Apply Dark on Teal preset">
+            <div class="preset-swatch" style="--bg:#008080;--fg:#1a1a1a"></div>
+            <span>Dark on Teal</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Section 7: Vision Simulation -->
+      <div class="section">
+        <div class="section-header">VISION SIMULATION</div>
+        <div class="vision-controls" role="group" aria-label="Vision simulation type">
+          <label class="vision-pill">
+            <input type="radio" name="vision" value="normal" checked aria-label="Normal vision">
+            <span>Normal</span>
+          </label>
+          <label class="vision-pill">
+            <input type="radio" name="vision" value="protanopia" aria-label="Protanopia simulation">
+            <span>Protanopia</span>
+          </label>
+          <label class="vision-pill">
+            <input type="radio" name="vision" value="deuteranopia" aria-label="Deuteranopia simulation">
+            <span>Deuteranopia</span>
+          </label>
+          <label class="vision-pill">
+            <input type="radio" name="vision" value="tritanopia" aria-label="Tritanopia simulation">
+            <span>Tritanopia</span>
+          </label>
+          <label class="vision-pill">
+            <input type="radio" name="vision" value="monochromacy" aria-label="Monochromacy simulation">
+            <span>Monochromacy</span>
+          </label>
+        </div>
+        <div class="vision-note" id="vision-note" hidden>
+          Color controls disabled during simulation
+        </div>
+      </div>
+
+    </div><!-- end controls-panel -->
+  </div><!-- end app -->
+
+  <script src="script.js"></script>
+</body>
+</html>
