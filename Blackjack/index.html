@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blackjack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Grain/noise overlay -->
+  <div class="grain-overlay"></div>
+
+  <!-- Top HUD -->
+  <header class="hud">
+    <h1 class="game-title">Blackjack</h1>
+    <div class="balance-display">
+      Balance: <span id="balance">$1000</span>
+    </div>
+  </header>
+
+  <!-- Main table -->
+  <main class="table">
+
+    <!-- Dealer zone -->
+    <section class="dealer-zone" id="dealer-zone">
+      <div class="zone-label">Dealer</div>
+      <div class="hand" id="dealer-hand"></div>
+      <div class="hand-value" id="dealer-value"></div>
+    </section>
+
+    <!-- Gold divider -->
+    <div class="table-divider"></div>
+
+    <!-- Player zone — supports split hands -->
+    <section class="player-zone" id="player-zone">
+      <div class="zone-label">Player</div>
+      <!-- Hands rendered dynamically by TypeScript -->
+      <div class="hands-container" id="hands-container"></div>
+      <div class="hand-value" id="player-value"></div>
+    </section>
+
+  </main>
+
+  <!-- Betting panel (shown before deal) -->
+  <div class="panel betting-panel" id="betting-panel">
+    <div class="bet-display">Bet: <span id="current-bet">$0</span></div>
+    <div class="chips" id="chip-tray">
+      <!-- Chips rendered by TypeScript -->
+    </div>
+    <div class="bet-actions">
+      <button id="btn-clear-bet">Clear</button>
+      <button id="btn-deal" disabled>Deal</button>
+    </div>
+  </div>
+
+  <!-- Action panel (shown during play) -->
+  <div class="panel action-panel hidden" id="action-panel">
+    <button id="btn-hit">Hit</button>
+    <button id="btn-stand">Stand</button>
+    <button id="btn-double">Double Down</button>
+    <button id="btn-split" disabled>Split</button>
+  </div>
+
+  <!-- Jack — The Advisor -->
+  <div id="jack">
+    <div class="jack-wrap">
+      <div class="jack-figure" id="jack-figure">
+        <div class="jack-hat">
+          <div class="jack-crown"></div>
+          <div class="jack-band"></div>
+          <div class="jack-brim"></div>
+        </div>
+        <div class="jack-head">
+          <div class="jack-eye-l"></div>
+          <div class="jack-eye-r"></div>
+          <div class="jack-monocle"></div>
+          <div class="jack-stache"></div>
+        </div>
+        <div class="jack-neck"></div>
+        <div class="jack-suit">
+          <div class="jack-shirt"></div>
+          <div class="jack-lapel-l"></div>
+          <div class="jack-lapel-r"></div>
+          <div class="jack-tie"></div>
+          <div class="jack-pocket"></div>
+        </div>
+        <div class="jack-legs">
+          <div class="jack-leg"></div>
+          <div class="jack-leg"></div>
+        </div>
+        <div class="jack-shoes">
+          <div class="jack-shoe"></div>
+          <div class="jack-shoe"></div>
+        </div>
+      </div>
+      <div class="jack-name">Jack</div>
+      <div class="jack-fee">5% per consult</div>
+    </div>
+    <div class="jack-bubble hidden" id="jack-bubble">
+      <div id="jack-bubble-text"></div>
+    </div>
+  </div>
+
+  <!-- Result overlay -->
+  <div class="result-overlay hidden" id="result-overlay">
+    <div class="result-message" id="result-message"></div>
+    <button id="btn-next-round">Play Again</button>
+  </div>
+
+  <!-- Game Over overlay -->
+  <div class="result-overlay hidden" id="game-over-overlay">
+    <div class="result-message" id="game-over-message">Game Over</div>
+    <p class="game-over-sub">The house always wins... eventually.</p>
+    <button id="btn-restart">New Game</button>
+  </div>
+
+  <!-- Message toast (for mid-game messages) -->
+  <div class="toast hidden" id="toast"></div>
+
+  <script src="game.js"></script>
+</body>
+</html>
