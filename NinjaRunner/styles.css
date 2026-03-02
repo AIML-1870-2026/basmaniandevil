@@ -1,0 +1,219 @@
+/* ============================================================
+   Dojo Runner — Dojo / Bamboo Endless Runner
+   styles.css
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Base reset & layout
+   ------------------------------------------------------------ */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #0d0b08;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* ------------------------------------------------------------
+   Game wrapper — positions overlays on top of the canvas
+   ------------------------------------------------------------ */
+
+.game-wrapper {
+  position: relative;
+}
+
+/* ------------------------------------------------------------
+   Canvas
+   ------------------------------------------------------------ */
+
+#gameCanvas {
+  display: block;
+  max-width: 100%;
+  border: 1px solid #3a2e1a;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+}
+
+/* ------------------------------------------------------------
+   HUD
+   ------------------------------------------------------------ */
+
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 10px 20px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Cinzel', serif;
+  color: #c8a020;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+#score {
+  flex-shrink: 0;
+}
+
+#hud-right {
+  display: flex;
+  gap: 18px;
+  flex-shrink: 0;
+}
+
+#highScore,
+#speedIndicator {
+  white-space: nowrap;
+}
+
+#title {
+  /* Centred title inside the HUD flex row */
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 16px;
+  letter-spacing: 4px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------
+   Shared overlay base — start screen & game-over screen
+   ------------------------------------------------------------ */
+
+#startScreen,
+#gameOverScreen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ------------------------------------------------------------
+   Start screen
+   ------------------------------------------------------------ */
+
+#startScreen {
+  background: transparent;
+}
+
+#startTitle {
+  font-family: 'Cinzel', serif;
+  font-size: 48px;
+  color: #d8c88a;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+  letter-spacing: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+#startSubtitle {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  color: #c8a020;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+#startHint {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: #6a5a30;
+  margin-top: 30px;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------
+   Game over screen
+   ------------------------------------------------------------ */
+
+#gameOverScreen {
+  background: rgba(0, 0, 0, 0.72);
+}
+
+#gameOverTitle {
+  font-family: 'Cinzel', serif;
+  font-size: 52px;
+  color: #b82000;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+  animation: flicker 1.8s ease-in-out infinite alternate;
+  text-align: center;
+}
+
+#deathCause {
+  color: #c8b880;
+  font-size: 16px;
+  margin: 10px 0;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+}
+
+#finalScore,
+#finalHighScore {
+  color: #c8a020;
+  font-size: 20px;
+  margin: 5px 0;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+}
+
+#restartHint {
+  color: #c8a020;
+  font-size: 14px;
+  margin-top: 20px;
+  animation: pulse 1.5s ease-in-out infinite;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+}
+
+/* ------------------------------------------------------------
+   Utility classes
+   ------------------------------------------------------------ */
+
+.hidden {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------
+   Keyframe animations
+   ------------------------------------------------------------ */
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes flicker {
+  0% {
+    opacity: 0.72;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ------------------------------------------------------------
+   Responsive — narrow screens
+   ------------------------------------------------------------ */
+
+@media (max-width: 820px) {
+  #startTitle {
+    font-size: 32px;
+  }
+}

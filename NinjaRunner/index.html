@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ninja Runner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+    <div id="hud">
+      <div id="score">SCORE: 0</div>
+      <div id="title">NINJA RUNNER</div>
+      <div id="hud-right">
+        <span id="highScore">BEST: 0</span>
+        <span id="speedIndicator">SPEED: 1x</span>
+      </div>
+    </div>
+
+    <div id="startScreen">
+      <h1 id="startTitle">NINJA RUNNER</h1>
+      <p id="startSubtitle">PRESS SPACE TO BEGIN</p>
+      <p id="startHint">← Arrow Keys / WASD to move &nbsp;|&nbsp; Space / Click to jump</p>
+    </div>
+
+    <div id="gameOverScreen" class="hidden">
+      <h1 id="gameOverTitle">GAME OVER</h1>
+      <p id="deathCause"></p>
+      <p id="finalScore"></p>
+      <p id="finalHighScore"></p>
+      <p id="restartHint">PRESS SPACE TO RESTART</p>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
