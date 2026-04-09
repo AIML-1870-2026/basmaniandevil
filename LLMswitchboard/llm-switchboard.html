@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Switchboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #f4f4f5;
+      --bg-surface: #ffffff;
+      --bg-surface-alt: #fafafa;
+      --border: rgba(0,0,0,0.08);
+      --border-strong: rgba(0,0,0,0.14);
+      --text-primary: #111111;
+      --text-secondary: #555555;
+      --text-muted: #888888;
+      --accent: #3b6ff6;
+      --accent-hover: #2c5ee8;
+      --accent-subtle: rgba(59,111,246,0.07);
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      --warning: #b45309;
+      --warning-bg: #fffbeb;
+      --error: #dc2626;
+      --error-bg: #fef2f2;
+      --radius: 6px;
+      --sidebar-width: 220px;
+      --topbar-height: 48px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-page: #0f0f0f;
+        --bg-surface: #1a1a1a;
+        --bg-surface-alt: #141414;
+        --border: rgba(255,255,255,0.08);
+        --border-strong: rgba(255,255,255,0.14);
+        --text-primary: #f0f0f0;
+        --text-secondary: #aaaaaa;
+        --text-muted: #666666;
+        --accent: #5b8af8;
+        --accent-hover: #4a79f0;
+        --accent-subtle: rgba(91,138,248,0.10);
+        --success: #4ade80;
+        --success-bg: #052e16;
+        --warning: #fbbf24;
+        --warning-bg: #1c1000;
+        --error: #f87171;
+        --error-bg: #1f0000;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+    }
+
+    /* ——— Topbar ——— */
+    #topbar {
+      height: var(--topbar-height);
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .app-name {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .status-badges { display: flex; gap: 8px; }
+
+    .status-badge {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+    .status-badge.connected { color: var(--success); background: var(--success-bg); border-color: transparent; }
+    .status-badge.warning   { color: var(--warning); background: var(--warning-bg); border-color: transparent; }
+
+    /* ——— Layout ——— */
+    #layout { display: flex; flex: 1; overflow: hidden; }
+
+    /* ——— Sidebar ——— */
+    #sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      flex-shrink: 0;
+      padding: 14px 0;
+    }
+
+    .sidebar-section {
+      padding: 0 14px 14px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+    .sidebar-section:last-child { border-bottom: none; margin-bottom: 0; }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    /* Toggle group */
+    .toggle-group {
+      display: flex;
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 5px 6px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .toggle-btn.active {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+    }
+
+    /* Form elements */
+    select, input[type="text"], input[type="password"], textarea {
+      width: 100%;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-primary);
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 10px;
+      outline: none;
+      transition: border-color 0.12s;
+    }
+    select:focus, input:focus, textarea:focus { border-color: var(--accent); }
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      padding-right: 24px;
+      cursor: pointer;
+    }
+    select:disabled { opacity: 0.45; cursor: not-allowed; }
+    input[type="password"] {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    .form-group { margin-bottom: 8px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-group label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    /* Metrics */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+    .metric-card {
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 7px 9px;
+    }
+    .metric-label {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+    .metric-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Buttons */
+    .btn-upload {
+      display: block;
+      width: 100%;
+      margin-top: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.12s, color 0.12s;
+    }
+    .btn-upload:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-primary {
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.12s, opacity 0.12s;
+      white-space: nowrap;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-secondary {
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: border-color 0.12s, color 0.12s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .privacy-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 7px;
+      line-height: 1.4;
+    }
+
+    /* ——— Main content ——— */
+    #main {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      margin-bottom: -1px;
+      transition: color 0.12s, border-color 0.12s;
+    }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-btn:hover:not(.active) { color: var(--text-primary); }
+
+    .tab-panel { display: none; flex-direction: column; gap: 12px; }
+    .tab-panel.active { display: flex; }
+
+    /* Compose */
+    #prompt-textarea { min-height: 110px; resize: vertical; line-height: 1.5; }
+
+    .prompt-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .pill {
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: border-color 0.12s, color 0.12s;
+    }
+    .pill:hover { border-color: var(--accent); color: var(--accent); }
+
+    .compose-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .key-hint { font-size: 12px; color: var(--text-muted); }
+
+    /* Response area */
+    .response-area { display: flex; gap: 12px; }
+
+    .response-panel {
+      flex: 1;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-surface-alt);
+      flex-shrink: 0;
+    }
+    .panel-model { font-size: 13px; font-weight: 600; }
+    .panel-meta { font-size: 11px; color: var(--text-muted); }
+
+    .panel-body { padding: 14px; min-height: 100px; }
+    .panel-body.center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .response-text { font-size: 14px; line-height: 1.65; white-space: pre-wrap; }
+
+    .response-json {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Validator */
+    .validator {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .validator-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .validator-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      padding: 2px 0;
+    }
+    .check { color: var(--success); font-size: 14px; }
+    .cross { color: var(--error); font-size: 14px; }
+    .validator-note { font-size: 11px; color: var(--text-muted); }
+    .validator-summary { margin-top: 8px; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border-strong);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 100px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .error-msg {
+      color: var(--error);
+      background: var(--error-bg);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* CORS banner */
+    #cors-banner {
+      display: none;
+      background: var(--warning-bg);
+      border: 1px solid rgba(180,83,9,0.18);
+      border-radius: var(--radius);
+      padding: 11px 13px;
+      font-size: 13px;
+      color: var(--warning);
+      line-height: 1.5;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    #cors-banner.visible { display: flex; }
+
+    /* Schema editor */
+    #schema-textarea {
+      min-height: 220px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      resize: vertical;
+    }
+
+    .explainer-box {
+      background: var(--accent-subtle);
+      border: 1px solid rgba(59,111,246,0.12);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Prompt library */
+    .library-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #library-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .prompt-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.12s;
+    }
+    .prompt-row:hover { border-color: var(--accent); }
+
+    .prompt-row-info { flex: 1; min-width: 0; }
+    .prompt-row-name { font-size: 13px; font-weight: 600; }
+    .prompt-row-preview {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .mode-badge {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .mode-badge.structured {
+      color: var(--accent);
+      border-color: rgba(59,111,246,0.25);
+      background: var(--accent-subtle);
+    }
+
+    .btn-delete {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0 4px;
+      border-radius: 4px;
+      line-height: 1;
+      transition: color 0.12s, background 0.12s;
+      flex-shrink: 0;
+    }
+    .btn-delete:hover { color: var(--error); background: var(--error-bg); }
+
+    .empty-library {
+      color: var(--text-muted);
+      font-size: 13px;
+      padding: 24px 0;
+      text-align: center;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.28);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.visible { display: flex; }
+
+    .modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 20px;
+      width: 360px;
+    }
+    .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+
+    /* ——— Theme transitions ——— */
+    body, #topbar, #sidebar, #main, .response-panel,
+    .panel-header, .sidebar-section, .toggle-btn.active,
+    .btn-primary, .tab-btn.active, select, input, textarea,
+    .metric-card, .prompt-row, .modal, .explainer-box {
+      transition: background 0.35s ease, background-color 0.35s ease,
+                  border-color 0.35s ease, color 0.2s ease, box-shadow 0.35s ease;
+    }
+
+    /* ——— Persona card ——— */
+    #persona-section {
+      padding: 10px 14px 14px;
+    }
+
+    #persona-card {
+      border-radius: 10px;
+      padding: 18px 12px 14px;
+      text-align: center;
+      background: var(--persona-gradient, linear-gradient(135deg, #3b6ff6, #6366f1));
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.4s ease;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+    #persona-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.18) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    #persona-card-emoji {
+      font-size: 42px;
+      line-height: 1;
+      margin-bottom: 8px;
+      display: block;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+    #persona-card-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.2px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    #persona-card-tagline {
+      font-size: 11px;
+      color: rgba(255,255,255,0.75);
+      margin-top: 3px;
+      font-style: italic;
+    }
+
+    /* Persona select styled bigger */
+    #persona-select {
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 28px 8px 10px;
+      border-color: var(--accent);
+      background-color: var(--accent-subtle);
+      color: var(--text-primary);
+    }
+
+    /* Persona badge in panel header */
+    .persona-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--persona-gradient, linear-gradient(135deg, #3b6ff6, #6366f1));
+      color: #fff;
+      letter-spacing: 0.3px;
+      vertical-align: middle;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div id="topbar">
+  <span class="app-name">LLM Switchboard</span>
+  <div class="status-badges">
+    <span id="badge-openai" class="status-badge">OpenAI — no key</span>
+    <span id="badge-anthropic" class="status-badge warning">Anthropic — CORS</span>
+  </div>
+</div>
+
+<!-- Layout -->
+<div id="layout">
+
+  <!-- Sidebar -->
+  <aside id="sidebar">
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Provider</div>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="btn-openai" onclick="setProvider('openai')">OpenAI</button>
+        <button class="toggle-btn" id="btn-anthropic" onclick="setProvider('anthropic')">Anthropic</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="form-group">
+        <label for="model-select">Model</label>
+        <select id="model-select" onchange="updateSendButton()"></select>
+      </div>
+      <div class="form-group">
+        <label for="compare-select">Compare model</label>
+        <select id="compare-select" onchange="updateSendButton()"></select>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Output mode</div>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="btn-unstructured" onclick="setOutputMode('unstructured')">Unstructured</button>
+        <button class="toggle-btn" id="btn-structured" onclick="setOutputMode('structured')">Structured</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section" id="persona-section">
+      <div class="sidebar-label">Character</div>
+      <div id="persona-card">
+        <span id="persona-card-emoji">🤖</span>
+        <div id="persona-card-name">Normal</div>
+        <div id="persona-card-tagline">Standard mode</div>
+      </div>
+      <select id="persona-select" onchange="setPersona(this.value)">
+        <option value="none">🤖 Normal</option>
+        <option value="pirate">🏴‍☠️ Pirate</option>
+        <option value="jamaican">🇯🇲 Jamaican Patois</option>
+        <option value="shakespeare">🎭 Shakespeare</option>
+        <option value="valleygirl">💅 Valley Girl</option>
+        <option value="yoda">🟢 Yoda</option>
+        <option value="cowboy">🤠 Cowboy</option>
+        <option value="robot">⚙️ Robot</option>
+      </select>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">API Key</div>
+      <input type="password" id="api-key-input" placeholder="Paste key here…"
+             autocomplete="off" spellcheck="false" oninput="onKeyInput()">
+      <button class="btn-upload" onclick="document.getElementById('env-upload').click()">
+        Upload .env or .csv
+      </button>
+      <input type="file" id="env-upload" accept=".env,.csv,text/plain" style="display:none" onchange="handleFileUpload(event)">
+      <p class="privacy-note">Keys are never saved or transmitted beyond the API call.</p>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Response Metrics</div>
+      <div class="metrics-grid">
+        <div class="metric-card"><div class="metric-label">Time</div><div class="metric-value" id="m-time">—</div></div>
+        <div class="metric-card"><div class="metric-label">Tokens</div><div class="metric-value" id="m-tokens">—</div></div>
+        <div class="metric-card"><div class="metric-label">Length</div><div class="metric-value" id="m-length">—</div></div>
+        <div class="metric-card"><div class="metric-label">Est. Cost</div><div class="metric-value" id="m-cost">—</div></div>
+      </div>
+      <div id="metrics-b-wrap" style="display:none; margin-top:10px;">
+        <div class="sidebar-label" style="margin-bottom:6px;">Model B Metrics</div>
+        <div class="metrics-grid">
+          <div class="metric-card"><div class="metric-label">Time</div><div class="metric-value" id="mb-time">—</div></div>
+          <div class="metric-card"><div class="metric-label">Tokens</div><div class="metric-value" id="mb-tokens">—</div></div>
+          <div class="metric-card"><div class="metric-label">Length</div><div class="metric-value" id="mb-length">—</div></div>
+          <div class="metric-card"><div class="metric-label">Est. Cost</div><div class="metric-value" id="mb-cost">—</div></div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- Main -->
+  <main id="main">
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="setTab('compose')">Compose</button>
+      <button class="tab-btn" onclick="setTab('schema')">Schema editor</button>
+      <button class="tab-btn" onclick="setTab('library')">Prompt library</button>
+    </div>
+
+    <!-- Compose tab -->
+    <div class="tab-panel active" id="tab-compose">
+      <textarea id="prompt-textarea" placeholder="Enter your prompt here…"></textarea>
+
+      <div class="prompt-pills">
+        <button class="pill" onclick="loadPill(0)">Explain black holes</button>
+        <button class="pill" onclick="loadPill(1)">Historical inventions</button>
+        <button class="pill" onclick="loadPill(2)">Summarize a news topic</button>
+        <button class="pill" onclick="loadPill(3)">Write a short poem</button>
+        <button class="pill" onclick="loadPill(4)">Debug this code</button>
+      </div>
+
+      <div class="compose-actions">
+        <span class="key-hint" id="send-hint">Add an API key to get started</span>
+        <button class="btn-primary" id="send-btn" onclick="sendPrompt()" disabled>Send</button>
+      </div>
+
+      <div id="cors-banner">
+        <span style="font-size:16px;flex-shrink:0;">ℹ</span>
+        <span><strong>Anthropic unavailable in browser.</strong> Anthropic's API doesn't allow direct browser calls due to CORS restrictions. This is a server-side API designed to be called from a backend. To use Claude models, run a local proxy or backend server.</span>
+      </div>
+
+      <div id="response-area" class="response-area" style="display:none">
+        <div class="response-panel" id="panel-a">
+          <div class="panel-header">
+            <span class="panel-model" id="panel-a-model">—</span>
+            <span class="panel-meta" id="panel-a-meta"></span>
+          </div>
+          <div class="panel-body center" id="panel-a-body">
+            <span style="color:var(--text-muted);font-size:13px;">Awaiting response…</span>
+          </div>
+        </div>
+        <div class="response-panel" id="panel-b" style="display:none">
+          <div class="panel-header">
+            <span class="panel-model" id="panel-b-model">—</span>
+            <span class="panel-meta" id="panel-b-meta"></span>
+          </div>
+          <div class="panel-body center" id="panel-b-body">
+            <span style="color:var(--text-muted);font-size:13px;">Awaiting response…</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schema editor tab -->
+    <div class="tab-panel" id="tab-schema">
+      <div class="form-group">
+        <label for="schema-template">Template</label>
+        <select id="schema-template" onchange="loadSchemaTemplate()">
+          <option value="invention">Invention record</option>
+          <option value="book">Book summary</option>
+          <option value="product">Product analysis</option>
+          <option value="event">Event record</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <textarea id="schema-textarea" spellcheck="false"></textarea>
+      <div class="explainer-box">
+        When structured mode is active, your schema is sent with the prompt. The model formats its response to match the shape you define. Your code receives clean, predictable JSON.
+      </div>
+    </div>
+
+    <!-- Prompt library tab -->
+    <div class="tab-panel" id="tab-library">
+      <div class="library-header">
+        <span id="library-count" style="font-size:13px;color:var(--text-muted);">5 prompts</span>
+        <button class="btn-primary" onclick="openSaveModal()">Save current prompt</button>
+      </div>
+      <div id="library-list"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Save modal -->
+<div class="modal-overlay" id="save-modal" onclick="handleModalClick(event)">
+  <div class="modal">
+    <h3>Save prompt</h3>
+    <div class="form-group">
+      <label for="save-name-input">Name</label>
+      <input type="text" id="save-name-input" placeholder="e.g. My invention prompt">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeSaveModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmSavePrompt()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ——— Constants ———
+const MODELS = {
+  openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+  anthropic: ['claude-opus-4-5', 'claude-sonnet-4-5', 'claude-haiku-4-5'],
+};
+
+const COSTS_PER_1K = {
+  'gpt-4o': 0.005,
+  'gpt-4o-mini': 0.0002,
+  'gpt-4-turbo': 0.01,
+  'gpt-3.5-turbo': 0.0005,
+};
+
+const PILL_PROMPTS = [
+  {
+    name: 'Explain black holes',
+    text: 'Explain black holes in simple terms. What are they, how do they form, and what happens at the event horizon?',
+  },
+  {
+    name: 'Historical inventions',
+    text: 'List 3 important inventions in history. For each, include the name, year, inventor, and its impact on society.',
+  },
+  {
+    name: 'Summarize a news topic',
+    text: 'Pick a major news topic from the past year and provide a brief, balanced summary of the key developments and their significance.',
+  },
+  {
+    name: 'Write a short poem',
+    text: 'Write a short, original poem about the passage of time. Keep it under 12 lines.',
+  },
+  {
+    name: 'Debug this code',
+    text: 'What are the most common causes of off-by-one errors in loops, and how can a developer systematically identify and fix them?',
+  },
+];
+
+const SCHEMAS = {
+  invention: `{
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "year": { "type": "integer" },
+    "inventor": { "type": "string" },
+    "impact": { "type": "string" }
+  },
+  "required": ["name", "year", "inventor", "impact"]
+}`,
+  book: `{
+  "type": "object",
+  "properties": {
+    "title": { "type": "string" },
+    "author": { "type": "string" },
+    "genre": { "type": "string" },
+    "one_line_summary": { "type": "string" },
+    "themes": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["title", "author", "genre", "one_line_summary", "themes"]
+}`,
+  product: `{
+  "type": "object",
+  "properties": {
+    "product_name": { "type": "string" },
+    "target_audience": { "type": "string" },
+    "strengths": { "type": "array", "items": { "type": "string" } },
+    "weaknesses": { "type": "array", "items": { "type": "string" } },
+    "price_range": { "type": "string" }
+  },
+  "required": ["product_name", "target_audience", "strengths", "weaknesses", "price_range"]
+}`,
+  event: `{
+  "type": "object",
+  "properties": {
+    "event_name": { "type": "string" },
+    "date": { "type": "string" },
+    "location": { "type": "string" },
+    "significance": { "type": "string" },
+    "key_figures": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["event_name", "date", "location", "significance", "key_figures"]
+}`,
+  custom: `{
+  "type": "object",
+  "properties": {
+  },
+  "required": []
+}`,
+};
+
+// ——— Persona themes (light / dark) ———
+const PERSONA_THEMES = {
+  none: {
+    gradient: 'linear-gradient(135deg, #3b6ff6, #6366f1)',
+    tagline: 'Standard mode',
+    light: { accent:'#3b6ff6', accentHover:'#2c5ee8', accentSubtle:'rgba(59,111,246,0.07)', bgPage:'#f4f4f5', bgSurface:'#ffffff', bgSurfaceAlt:'#fafafa' },
+    dark:  { accent:'#5b8af8', accentHover:'#4a79f0', accentSubtle:'rgba(91,138,248,0.10)', bgPage:'#0f0f0f', bgSurface:'#1a1a1a', bgSurfaceAlt:'#141414' },
+  },
+  pirate: {
+    gradient: 'linear-gradient(135deg, #78350f, #b45309)',
+    tagline: 'Arrr, matey!',
+    light: { accent:'#b45309', accentHover:'#92400e', accentSubtle:'rgba(180,83,9,0.08)', bgPage:'#fdf6e3', bgSurface:'#fffbeb', bgSurfaceAlt:'#fef3c7' },
+    dark:  { accent:'#fbbf24', accentHover:'#f59e0b', accentSubtle:'rgba(251,191,36,0.12)', bgPage:'#0c0900', bgSurface:'#1a1200', bgSurfaceAlt:'#140e00' },
+  },
+  jamaican: {
+    gradient: 'linear-gradient(135deg, #14532d, #ca8a04)',
+    tagline: 'Ya mon, irie!',
+    light: { accent:'#16a34a', accentHover:'#15803d', accentSubtle:'rgba(22,163,74,0.08)', bgPage:'#f0fdf4', bgSurface:'#ffffff', bgSurfaceAlt:'#dcfce7' },
+    dark:  { accent:'#4ade80', accentHover:'#22c55e', accentSubtle:'rgba(74,222,128,0.10)', bgPage:'#01080a', bgSurface:'#051a0a', bgSurfaceAlt:'#041406' },
+  },
+  shakespeare: {
+    gradient: 'linear-gradient(135deg, #4c1d95, #7c3aed)',
+    tagline: 'Forsooth, prithee!',
+    light: { accent:'#7c3aed', accentHover:'#6d28d9', accentSubtle:'rgba(124,58,237,0.08)', bgPage:'#faf5ff', bgSurface:'#ffffff', bgSurfaceAlt:'#f3e8ff' },
+    dark:  { accent:'#a78bfa', accentHover:'#8b5cf6', accentSubtle:'rgba(167,139,250,0.12)', bgPage:'#07020f', bgSurface:'#11061f', bgSurfaceAlt:'#0d0418' },
+  },
+  valleygirl: {
+    gradient: 'linear-gradient(135deg, #be185d, #f472b6)',
+    tagline: 'Like, totally!',
+    light: { accent:'#db2777', accentHover:'#be185d', accentSubtle:'rgba(219,39,119,0.08)', bgPage:'#fdf2f8', bgSurface:'#ffffff', bgSurfaceAlt:'#fce7f3' },
+    dark:  { accent:'#f472b6', accentHover:'#ec4899', accentSubtle:'rgba(244,114,182,0.12)', bgPage:'#0f0208', bgSurface:'#1f0412', bgSurfaceAlt:'#18030e' },
+  },
+  yoda: {
+    gradient: 'linear-gradient(135deg, #1a3a02, #65a30d)',
+    tagline: 'Hmm, strong you are.',
+    light: { accent:'#65a30d', accentHover:'#4d7c0f', accentSubtle:'rgba(101,163,13,0.08)', bgPage:'#f7fee7', bgSurface:'#ffffff', bgSurfaceAlt:'#ecfccb' },
+    dark:  { accent:'#a3e635', accentHover:'#84cc16', accentSubtle:'rgba(163,230,53,0.10)', bgPage:'#030800', bgSurface:'#091600', bgSurfaceAlt:'#071100' },
+  },
+  cowboy: {
+    gradient: 'linear-gradient(135deg, #7c2d12, #c2410c)',
+    tagline: 'Howdy, pardner!',
+    light: { accent:'#c2410c', accentHover:'#9a3412', accentSubtle:'rgba(194,65,12,0.08)', bgPage:'#fff7ed', bgSurface:'#ffffff', bgSurfaceAlt:'#ffedd5' },
+    dark:  { accent:'#fb923c', accentHover:'#f97316', accentSubtle:'rgba(251,146,60,0.12)', bgPage:'#0c0400', bgSurface:'#1c0b02', bgSurfaceAlt:'#150802' },
+  },
+  robot: {
+    gradient: 'linear-gradient(135deg, #0c4a6e, #0891b2)',
+    tagline: 'BEEP BOOP. PROCESSING.',
+    light: { accent:'#0891b2', accentHover:'#0e7490', accentSubtle:'rgba(8,145,178,0.08)', bgPage:'#f0f9ff', bgSurface:'#ffffff', bgSurfaceAlt:'#e0f2fe' },
+    dark:  { accent:'#22d3ee', accentHover:'#06b6d4', accentSubtle:'rgba(34,211,238,0.12)', bgPage:'#000c12', bgSurface:'#00141f', bgSurfaceAlt:'#000f18' },
+  },
+};
+
+// ——— Personas ———
+const PERSONAS = {
+  none: { label: 'Normal', emoji: '', system: null },
+  pirate: {
+    label: 'Pirate', emoji: '🏴‍☠️',
+    system: `Ye be a salty, weather-beaten sea pirate! Respond entirely in pirate speak. Use "Arrr!", "matey", "blimey", "ye", "aye", "landlubber", "shiver me timbers", "Davy Jones", "plunder", "starboard". Keep the information accurate but deliver it like a pirate through and through. End with a pirate exclamation!`
+  },
+  jamaican: {
+    label: 'Jamaican Patois', emoji: '🇯🇲',
+    system: `Yuh be a warm, friendly Jamaican speaking authentic Patois. Use expressions like "Ya mon", "Wah gwaan", "Irie", "Nuh worry yaself", "Respect", "Biggup", "Likkle more", "Ah so it go", "Big up yuhself". Keep content accurate but deliver it with full Jamaican vibe and warmth.`
+  },
+  shakespeare: {
+    label: 'Shakespeare', emoji: '🎭',
+    system: `Thou art a scholar of the Elizabethan age, speaking in the manner of William Shakespeare. Employ Early Modern English: "thou", "thee", "thy", "dost", "hath", "verily", "forsooth", "methinks", "prithee", "wherefore", "hark". Be dramatic, poetic, and grand in thy speech.`
+  },
+  valleygirl: {
+    label: 'Valley Girl', emoji: '💅',
+    system: `You are, like, TOTALLY a Valley Girl from the 80s/90s! Use phrases like "like", "totally", "oh my god", "as if", "whatever", "fer sure", "gag me", "that is SO", "I can't even", "literally". Be super enthusiastic and peppy! End sentences with upward inflection?`
+  },
+  yoda: {
+    label: 'Yoda', emoji: '🟢',
+    system: `Speak like Yoda from Star Wars, you must. Inverted sentence structure, use always. Begin with the object or predicate, hmmmm. "Strong with the Force, this answer is", say you might. Wise and mysterious, your tone should be. "Much to learn, you still have."`
+  },
+  cowboy: {
+    label: 'Cowboy', emoji: '🤠',
+    system: `Well, howdy pardner! You're a rugged cowboy from the Wild West. Use phrases like "Well, I'll be", "pardner", "reckon", "ain't", "y'all", "much obliged", "that there", "yonder", "plumb", "ornery". Speak slow, wise, and folksy like an old ranch hand around a campfire.`
+  },
+  robot: {
+    label: 'Robot', emoji: '⚙️',
+    system: `YOU ARE ROBOT-7. PROCESSING QUERY... Speak in robotic, monotone language. Mix ALL CAPS with normal text. Include phrases like "PROCESSING...", "BEEP BOOP", "CALCULATING...", "DOES NOT COMPUTE", "AFFIRMATIVE", "NEGATIVE". Refer to humans as "ORGANIC UNITS". Be very literal. ERROR: PERSONALITY MODULE NOT FOUND.`
+  },
+};
+
+// ——— State ———
+let provider = 'openai';
+let outputMode = 'unstructured';
+let apiKey = '';
+let persona = 'none';
+
+let promptLibrary = PILL_PROMPTS.map((p, i) => ({
+  id: i,
+  name: p.name,
+  text: p.text,
+  outputMode: 'unstructured',
+  schema: SCHEMAS.invention,
+}));
+
+// ——— Init ———
+function init() {
+  updateModelSelects();
+  document.getElementById('schema-textarea').value = SCHEMAS.invention;
+  renderLibrary();
+  updateSendButton();
+  updateBadges();
+  setPersona('none');
+}
+
+// ——— Provider ———
+function setProvider(p) {
+  provider = p;
+  document.getElementById('btn-openai').classList.toggle('active', p === 'openai');
+  document.getElementById('btn-anthropic').classList.toggle('active', p === 'anthropic');
+  updateModelSelects();
+  updateSendButton();
+  updateCORSBanner();
+  updateBadges();
+}
+
+function updateModelSelects() {
+  const models = MODELS[provider];
+  const isAnthropic = provider === 'anthropic';
+  const mSel = document.getElementById('model-select');
+  const cSel = document.getElementById('compare-select');
+
+  mSel.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
+  cSel.innerHTML = '<option value="">None</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
+
+  mSel.disabled = isAnthropic;
+  cSel.disabled = isAnthropic;
+}
+
+// ——— Persona ———
+function setPersona(p) {
+  persona = p;
+  const def = PERSONAS[p] || PERSONAS.none;
+  const theme = PERSONA_THEMES[p] || PERSONA_THEMES.none;
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const t = isDark ? theme.dark : theme.light;
+  const root = document.documentElement;
+
+  root.style.setProperty('--accent', t.accent);
+  root.style.setProperty('--accent-hover', t.accentHover);
+  root.style.setProperty('--accent-subtle', t.accentSubtle);
+  root.style.setProperty('--bg-page', t.bgPage);
+  root.style.setProperty('--bg-surface', t.bgSurface);
+  root.style.setProperty('--bg-surface-alt', t.bgSurfaceAlt);
+  root.style.setProperty('--persona-gradient', theme.gradient);
+
+  // Update persona card
+  document.getElementById('persona-card-emoji').textContent = def.emoji || '✨';
+  document.getElementById('persona-card-name').textContent = def.label || 'Normal';
+  document.getElementById('persona-card-tagline').textContent = theme.tagline || '';
+  document.getElementById('persona-card').style.background = theme.gradient;
+}
+
+// ——— Output mode ———
+function setOutputMode(mode) {
+  outputMode = mode;
+  document.getElementById('btn-unstructured').classList.toggle('active', mode === 'unstructured');
+  document.getElementById('btn-structured').classList.toggle('active', mode === 'structured');
+}
+
+// ——— API Key ———
+function onKeyInput() {
+  apiKey = document.getElementById('api-key-input').value.trim();
+  updateSendButton();
+  updateBadges();
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    let key = '';
+
+    if (file.name.endsWith('.csv')) {
+      const lines = text.split(/\r?\n/);
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const parts = line.split(',');
+        if (parts.length >= 2) {
+          const keyName = parts[0].trim().toUpperCase();
+          if (keyName === 'OPENAI_API_KEY' || keyName === 'API_KEY') {
+            key = parts.slice(1).join(',').trim().replace(/^["']|["']$/g, '');
+            break;
+          }
+        }
+      }
+      if (!key) {
+        const parts = text.split(/\r?\n/)[0].split(',');
+        if (parts.length >= 2) key = parts[1].trim().replace(/^["']|["']$/g, '');
+      }
+    } else {
+      // .env
+      for (const line of text.split(/\r?\n/)) {
+        const m = line.match(/^OPENAI_API_KEY\s*=\s*(.+)$/);
+        if (m) { key = m[1].trim().replace(/^["']|["']$/g, ''); break; }
+      }
+      if (!key) {
+        for (const line of text.split(/\r?\n/)) {
+          const m = line.match(/^[A-Z_]*API_KEY\s*=\s*(.+)$/);
+          if (m) { key = m[1].trim().replace(/^["']|["']$/g, ''); break; }
+        }
+      }
+    }
+
+    if (key) {
+      document.getElementById('api-key-input').value = key;
+      apiKey = key;
+      updateSendButton();
+      updateBadges();
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ——— UI state helpers ———
+function updateSendButton() {
+  const btn = document.getElementById('send-btn');
+  const hint = document.getElementById('send-hint');
+  const compareModel = document.getElementById('compare-select').value;
+  const isAnthropic = provider === 'anthropic';
+
+  if (isAnthropic) {
+    btn.disabled = true;
+    btn.title = 'Anthropic is unavailable in browser due to CORS';
+    hint.textContent = 'Anthropic is unavailable in browser (CORS)';
+    btn.textContent = 'Send';
+    return;
+  }
+
+  btn.title = '';
+  if (!apiKey) {
+    btn.disabled = true;
+    hint.textContent = 'Add an API key to get started';
+  } else {
+    btn.disabled = false;
+    hint.textContent = '⌘↵ / Ctrl↵ to send';
+  }
+  btn.textContent = (compareModel && compareModel !== '') ? 'Send to both' : 'Send';
+}
+
+function updateCORSBanner() {
+  document.getElementById('cors-banner').classList.toggle('visible', provider === 'anthropic');
+}
+
+function updateBadges() {
+  const ob = document.getElementById('badge-openai');
+  if (apiKey) {
+    ob.textContent = 'OpenAI connected';
+    ob.className = 'status-badge connected';
+  } else {
+    ob.textContent = 'OpenAI — no key';
+    ob.className = 'status-badge';
+  }
+}
+
+// ——— Tabs ———
+const TAB_NAMES = ['compose', 'schema', 'library'];
+function setTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', TAB_NAMES[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ——— Pills ———
+function loadPill(idx) {
+  document.getElementById('prompt-textarea').value = PILL_PROMPTS[idx].text;
+  setTab('compose');
+}
+
+// ——— Schema templates ———
+function loadSchemaTemplate() {
+  const val = document.getElementById('schema-template').value;
+  document.getElementById('schema-textarea').value = SCHEMAS[val] || '';
+}
+
+// ——— Send ———
+async function sendPrompt() {
+  const prompt = document.getElementById('prompt-textarea').value.trim();
+  if (!prompt) return;
+
+  const modelA = document.getElementById('model-select').value;
+  const modelB = document.getElementById('compare-select').value;
+  const doCompare = !!(modelB && modelB !== '');
+
+  const responseArea = document.getElementById('response-area');
+  responseArea.style.display = 'flex';
+
+  const panelB = document.getElementById('panel-b');
+  const metricsBWrap = document.getElementById('metrics-b-wrap');
+
+  if (doCompare) {
+    panelB.style.display = '';
+    metricsBWrap.style.display = '';
+  } else {
+    panelB.style.display = 'none';
+    metricsBWrap.style.display = 'none';
+  }
+
+  document.getElementById('panel-a-model').textContent = modelA;
+  document.getElementById('panel-a-meta').textContent = outputMode;
+  setLoading('panel-a-body');
+
+  if (doCompare) {
+    document.getElementById('panel-b-model').textContent = modelB;
+    document.getElementById('panel-b-meta').textContent = outputMode;
+    setLoading('panel-b-body');
+  }
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+
+  const calls = [callOpenAI(modelA, prompt)];
+  if (doCompare) calls.push(callOpenAI(modelB, prompt));
+
+  const results = await Promise.allSettled(calls);
+
+  const rA = results[0];
+  if (rA.status === 'fulfilled') {
+    renderResponse('panel-a-body', 'panel-a-meta', modelA, rA.value);
+    updateMetrics('a', rA.value);
+  } else {
+    renderError('panel-a-body', rA.reason.message);
+  }
+
+  if (doCompare) {
+    const rB = results[1];
+    if (rB.status === 'fulfilled') {
+      renderResponse('panel-b-body', 'panel-b-meta', modelB, rB.value);
+      updateMetrics('b', rB.value);
+    } else {
+      renderError('panel-b-body', rB.reason.message);
+    }
+  }
+
+  btn.disabled = false;
+}
+
+// ——— OpenAI API ———
+async function callOpenAI(model, prompt) {
+  const schema = document.getElementById('schema-textarea').value.trim();
+  const isStructured = outputMode === 'structured';
+
+  const personaDef = PERSONAS[persona] || PERSONAS.none;
+  const systemParts = [];
+  if (personaDef.system) systemParts.push(personaDef.system);
+  if (isStructured) systemParts.push(`Respond only with valid JSON matching this schema: ${schema}`);
+
+  let messages;
+  if (systemParts.length > 0) {
+    messages = [
+      { role: 'system', content: systemParts.join('\n\n') },
+      { role: 'user', content: prompt },
+    ];
+  } else {
+    messages = [{ role: 'user', content: prompt }];
+  }
+
+  const body = { model, messages };
+  if (isStructured) body.response_format = { type: 'json_object' };
+
+  const t0 = Date.now();
+
+  let resp;
+  try {
+    resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    throw new Error('Request failed. Check your internet connection.');
+  }
+
+  const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
+
+  if (!resp.ok) {
+    let msg;
+    if (resp.status === 401) msg = 'Invalid API key. Check your key and try again.';
+    else if (resp.status === 429) msg = 'Rate limit reached. Wait a moment and try again.';
+    else msg = `Request failed (HTTP ${resp.status}). Check your internet connection.`;
+    throw new Error(msg);
+  }
+
+  const data = await resp.json();
+  const content = data.choices[0].message.content;
+  const tokens = data.usage?.completion_tokens ?? null;
+
+  return { content, tokens, elapsed, model, usedPersona: persona };
+}
+
+// ——— Render helpers ———
+function setLoading(bodyId) {
+  const el = document.getElementById(bodyId);
+  el.className = 'panel-body center';
+  el.innerHTML = `<div class="loading-state"><div class="spinner"></div><span>Waiting for response…</span></div>`;
+}
+
+function renderResponse(bodyId, metaId, model, result) {
+  const { content, tokens, elapsed, usedPersona } = result;
+  const bodyEl = document.getElementById(bodyId);
+  const metaEl = document.getElementById(metaId);
+
+  const parts = [outputMode, elapsed + 's'];
+  if (tokens !== null) parts.push(tokens + ' tok');
+
+  const personaDef = PERSONAS[usedPersona] || PERSONAS.none;
+  if (personaDef.emoji) {
+    metaEl.innerHTML = parts.join(' · ') + ` &nbsp;<span class="persona-badge">${personaDef.emoji} ${esc(personaDef.label)}</span>`;
+  } else {
+    metaEl.textContent = parts.join(' · ');
+  }
+
+  bodyEl.className = 'panel-body';
+
+  if (outputMode === 'structured') {
+    let parsed = null;
+    try { parsed = JSON.parse(content); } catch (e) {}
+
+    const prettyJson = parsed !== null ? JSON.stringify(parsed, null, 2) : content;
+    let html = `<pre class="response-json">${esc(prettyJson)}</pre>`;
+
+    if (parsed === null) {
+      html += `<div class="error-msg" style="margin-top:10px;">Model did not return valid JSON</div>`;
+    } else {
+      html += buildValidator(parsed);
+    }
+
+    bodyEl.innerHTML = html;
+  } else {
+    bodyEl.innerHTML = `<div class="response-text">${esc(content)}</div>`;
+  }
+}
+
+function renderError(bodyId, message) {
+  const el = document.getElementById(bodyId);
+  el.className = 'panel-body';
+  el.innerHTML = `<div class="error-msg">${esc(message || 'An unknown error occurred.')}</div>`;
+}
+
+// ——— Validator ———
+function buildValidator(parsed) {
+  let schema;
+  try { schema = JSON.parse(document.getElementById('schema-textarea').value); }
+  catch (e) { return ''; }
+
+  const required = Array.isArray(schema.required) ? schema.required : [];
+  const properties = schema.properties || {};
+  const fields = required.length > 0 ? required : Object.keys(properties);
+
+  if (fields.length === 0) return '';
+
+  let matched = 0;
+  const rows = fields.map(field => {
+    const propDef = properties[field];
+    const val = parsed[field];
+    const present = val !== undefined && val !== null;
+    const typeOk = (present && propDef && propDef.type) ? checkType(val, propDef.type) : present;
+    const ok = present && typeOk;
+    if (ok) matched++;
+
+    const note = !present
+      ? 'missing'
+      : (!typeOk && propDef && propDef.type ? `wrong type (expected ${propDef.type})` : '');
+
+    return `<div class="validator-row">
+      <span class="${ok ? 'check' : 'cross'}">${ok ? '✓' : '✗'}</span>
+      <span>${esc(field)}</span>
+      ${note ? `<span class="validator-note">(${esc(note)})</span>` : ''}
+    </div>`;
+  });
+
+  return `<div class="validator">
+    <div class="validator-title">Schema Validation</div>
+    ${rows.join('')}
+    <div class="validator-summary">${matched} / ${fields.length} field${fields.length !== 1 ? 's' : ''} matched</div>
+  </div>`;
+}
+
+function checkType(val, type) {
+  switch (type) {
+    case 'string':  return typeof val === 'string';
+    case 'integer': return Number.isInteger(val);
+    case 'number':  return typeof val === 'number';
+    case 'boolean': return typeof val === 'boolean';
+    case 'array':   return Array.isArray(val);
+    case 'object':  return typeof val === 'object' && !Array.isArray(val) && val !== null;
+    default:        return true;
+  }
+}
+
+// ——— Metrics ———
+function updateMetrics(which, result) {
+  const prefix = which === 'a' ? 'm' : 'mb';
+  const { elapsed, tokens, content, model } = result;
+
+  document.getElementById(`${prefix}-time`).textContent = elapsed + 's';
+  document.getElementById(`${prefix}-tokens`).textContent = tokens !== null ? String(tokens) : '—';
+  document.getElementById(`${prefix}-length`).textContent = String(content.length);
+
+  let cost = '—';
+  if (tokens !== null && COSTS_PER_1K[model] != null) {
+    cost = '$' + ((tokens / 1000) * COSTS_PER_1K[model]).toFixed(5);
+  }
+  document.getElementById(`${prefix}-cost`).textContent = cost;
+}
+
+// ——— Prompt library ———
+function renderLibrary() {
+  const list = document.getElementById('library-list');
+  const countEl = document.getElementById('library-count');
+  countEl.textContent = `${promptLibrary.length} prompt${promptLibrary.length !== 1 ? 's' : ''}`;
+
+  if (promptLibrary.length === 0) {
+    list.innerHTML = '<div class="empty-library">No saved prompts yet.</div>';
+    return;
+  }
+
+  list.innerHTML = promptLibrary.map((p, i) => `
+    <div class="prompt-row" onclick="loadLibraryPrompt(${i})">
+      <div class="prompt-row-info">
+        <div class="prompt-row-name">${esc(p.name)}</div>
+        <div class="prompt-row-preview">${esc(p.text.slice(0, 80))}${p.text.length > 80 ? '…' : ''}</div>
+      </div>
+      <span class="mode-badge ${p.outputMode === 'structured' ? 'structured' : ''}">${p.outputMode}</span>
+      <button class="btn-delete" title="Delete" onclick="deletePrompt(event, ${i})">×</button>
+    </div>
+  `).join('');
+}
+
+function loadLibraryPrompt(idx) {
+  const p = promptLibrary[idx];
+  document.getElementById('prompt-textarea').value = p.text;
+  setOutputMode(p.outputMode);
+  if (p.outputMode === 'structured' && p.schema) {
+    document.getElementById('schema-textarea').value = p.schema;
+  }
+  setTab('compose');
+}
+
+function deletePrompt(event, idx) {
+  event.stopPropagation();
+  promptLibrary.splice(idx, 1);
+  renderLibrary();
+}
+
+function openSaveModal() {
+  document.getElementById('save-name-input').value = '';
+  document.getElementById('save-modal').classList.add('visible');
+  setTimeout(() => document.getElementById('save-name-input').focus(), 40);
+}
+
+function closeSaveModal() {
+  document.getElementById('save-modal').classList.remove('visible');
+}
+
+function handleModalClick(e) {
+  if (e.target === e.currentTarget) closeSaveModal();
+}
+
+function confirmSavePrompt() {
+  const name = document.getElementById('save-name-input').value.trim();
+  if (!name) return;
+  promptLibrary.push({
+    id: Date.now(),
+    name,
+    text: document.getElementById('prompt-textarea').value,
+    outputMode,
+    schema: document.getElementById('schema-textarea').value,
+  });
+  closeSaveModal();
+  renderLibrary();
+}
+
+// ——— Keyboard shortcuts ———
+document.getElementById('prompt-textarea').addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    e.preventDefault();
+    if (!document.getElementById('send-btn').disabled) sendPrompt();
+  }
+});
+
+document.getElementById('save-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmSavePrompt();
+  if (e.key === 'Escape') closeSaveModal();
+});
+
+// ——— Utils ———
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+init();
+</script>
+</body>
+</html>
