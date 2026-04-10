@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Review Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #f5f4ff;
+      --bg-surface: #ffffff;
+      --bg-surface-alt: #f4f3ff;
+      --border: rgba(99,91,255,0.12);
+      --border-strong: rgba(99,91,255,0.22);
+      --text-primary: #0f0e1a;
+      --text-secondary: #4b4868;
+      --text-muted: #9997b0;
+      --accent: #635bff;
+      --accent-hover: #4f46e5;
+      --accent-subtle: rgba(99,91,255,0.08);
+      --success: #059669;
+      --success-bg: #ecfdf5;
+      --error: #dc2626;
+      --error-bg: #fef2f2;
+      --radius: 10px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+      --shadow: 0 4px 16px rgba(99,91,255,0.1), 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-page: #0d0c1a;
+        --bg-surface: #16152a;
+        --bg-surface-alt: #1e1d35;
+        --border: rgba(139,92,246,0.15);
+        --border-strong: rgba(139,92,246,0.28);
+        --text-primary: #f0eeff;
+        --text-secondary: #a8a4c8;
+        --text-muted: #6b6890;
+        --accent: #7c6fff;
+        --accent-hover: #6b5ff0;
+        --accent-subtle: rgba(124,111,255,0.12);
+        --success: #34d399;
+        --success-bg: #0a2e22;
+        --error: #f87171;
+        --error-bg: #1f0000;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+        --shadow: 0 4px 16px rgba(0,0,0,0.4);
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ——— Hero ——— */
+    #hero {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 44px 24px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 90% 70% at 50% -10%, rgba(99,91,255,0.14) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      background: var(--accent-subtle);
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .hero-title {
+      font-size: clamp(26px, 5vw, 40px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      background: linear-gradient(140deg, var(--text-primary) 10%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 15px;
+      color: var(--text-secondary);
+      max-width: 380px;
+      margin: 0 auto 28px;
+      line-height: 1.5;
+    }
+
+    /* ——— API Key bar ——— */
+    .key-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-surface-alt);
+      border: 1.5px solid var(--border-strong);
+      border-radius: 999px;
+      padding: 6px 6px 6px 18px;
+      max-width: 440px;
+      width: 100%;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .key-bar:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-subtle);
+    }
+
+    .key-bar input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-primary);
+      min-width: 0;
+    }
+
+    .key-bar input::placeholder { color: var(--text-muted); }
+
+    .btn-pill {
+      padding: 6px 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.12s;
+      flex-shrink: 0;
+    }
+    .btn-pill:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-subtle); }
+
+    #badge-key {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      margin-top: 8px;
+      transition: all 0.2s;
+    }
+    #badge-key.connected { color: var(--success); background: var(--success-bg); border-color: transparent; }
+
+    .privacy-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* ——— Layout ——— */
+    #layout {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 28px 20px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* ——— Card ——— */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.2s;
+    }
+    .card:focus-within { box-shadow: var(--shadow); }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .section-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--accent-subtle);
+      border: 1px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+
+    .section-label {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    /* ——— Form elements ——— */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .label-note {
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border-strong);
+      border-radius: var(--radius);
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input[type="text"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-subtle);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 88px;
+      line-height: 1.55;
+    }
+
+    /* ——— Chip groups ——— */
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      padding: 6px 15px;
+      border-radius: 999px;
+      border: 1.5px solid var(--border-strong);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.12s;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .chip:hover:not(.active) {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-subtle);
+    }
+
+    .chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(99,91,255,0.35);
+    }
+
+    .chip.snob.active {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      border-color: transparent;
+      box-shadow: 0 2px 10px rgba(124,58,237,0.45);
+    }
+
+    /* ——— Divider ——— */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 22px 0;
+    }
+
+    /* ——— Generate button ——— */
+    #generate-btn {
+      width: 100%;
+      padding: 14px 24px;
+      background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.12s, transform 0.1s, box-shadow 0.12s;
+      box-shadow: 0 4px 16px rgba(99,91,255,0.42);
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    #generate-btn:hover:not(:disabled) {
+      opacity: 0.93;
+      transform: translateY(-1px);
+      box-shadow: 0 7px 22px rgba(99,91,255,0.52);
+    }
+
+    #generate-btn:active:not(:disabled) { transform: translateY(0); }
+    #generate-btn:disabled { opacity: 0.38; cursor: not-allowed; box-shadow: none; transform: none; }
+
+    body.snob-active #generate-btn {
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c026d3 100%);
+      box-shadow: 0 4px 16px rgba(124,58,237,0.48);
+    }
+
+    .key-hint {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* ——— Output card ——— */
+    #output-section { display: none; }
+
+    .output-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .output-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      line-height: 1.2;
+    }
+
+    .output-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .output-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .btn-copy {
+      padding: 5px 13px;
+      background: var(--bg-surface-alt);
+      border: 1.5px solid var(--border-strong);
+      border-radius: 999px;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.12s;
+      white-space: nowrap;
+    }
+
+    .btn-copy:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-subtle); }
+    .btn-copy.copied { color: var(--success); border-color: var(--success); background: var(--success-bg); }
+
+    /* ——— Loading ——— */
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border-strong);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 52px 0;
+      color: var(--text-muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .loading-label { font-weight: 500; color: var(--text-secondary); }
+    .loading-sub { font-size: 12px; }
+
+    .loading-dots::after {
+      content: '.';
+      animation: dots 1.2s steps(3, end) infinite;
+    }
+    @keyframes dots {
+      0%, 100% { content: '.'; }
+      33%       { content: '..'; }
+      66%       { content: '...'; }
+    }
+
+    /* ——— Error ——— */
+    .error-msg {
+      color: var(--error);
+      background: var(--error-bg);
+      border: 1px solid rgba(220,38,38,0.2);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    /* ——— Review content ——— */
+    .review-content {
+      line-height: 1.75;
+      color: var(--text-primary);
+    }
+
+    .review-content h1,
+    .review-content h2,
+    .review-content h3 {
+      margin-top: 1.4em;
+      margin-bottom: 0.45em;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .review-content h1:first-child,
+    .review-content h2:first-child,
+    .review-content h3:first-child { margin-top: 0; }
+
+    .review-content h1 { font-size: 1.3em; }
+    .review-content h2 { font-size: 1.15em; }
+    .review-content h3 { font-size: 1em; }
+
+    .review-content p { margin-bottom: 0.9em; }
+
+    .review-content ul,
+    .review-content ol { margin: 0.5em 0 0.9em 1.4em; }
+
+    .review-content li { margin-bottom: 0.35em; }
+    .review-content strong { font-weight: 600; }
+    .review-content em { font-style: italic; }
+
+    .review-content blockquote {
+      border-left: 3px solid var(--accent);
+      padding-left: 14px;
+      color: var(--text-secondary);
+      margin: 0.6em 0;
+      font-style: italic;
+    }
+
+    .review-content hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.2em 0;
+    }
+
+    /* ——— Responsive ——— */
+    @media (max-width: 560px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full { grid-column: 1; }
+      #hero { padding: 32px 20px 28px; }
+      .key-bar { border-radius: 14px; padding: 10px 14px; flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<div id="hero">
+  <div class="hero-badge">✨ AI-Powered</div>
+  <h1 class="hero-title">Product Review Generator</h1>
+  <p class="hero-sub">Generate realistic, detailed product reviews in seconds using AI.</p>
+
+  <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+    <div class="key-bar">
+      <input type="password" id="api-key-input" placeholder="Paste your OpenAI API key…" autocomplete="off" spellcheck="false" oninput="onKeyInput()">
+      <button class="btn-pill" onclick="document.getElementById('env-upload').click()">Upload .env</button>
+      <input type="file" id="env-upload" accept=".env,text/plain" style="display:none" onchange="handleFileUpload(event)">
+    </div>
+    <span id="badge-key">No API key</span>
+    <p class="privacy-note">Your key is never stored or shared beyond the API call.</p>
+  </div>
+</div>
+
+<div id="layout">
+
+  <!-- Product Details -->
+  <div class="card">
+    <div class="section-header">
+      <div class="section-icon">📦</div>
+      <span class="section-label">Product Details</span>
+    </div>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label for="product-name">Product Name</label>
+        <input type="text" id="product-name" placeholder="e.g. Sony WH-1000XM5">
+      </div>
+
+      <div class="form-group">
+        <label for="product-category">Category</label>
+        <select id="product-category">
+          <option value="Electronics">Electronics</option>
+          <option value="Clothing &amp; Apparel">Clothing &amp; Apparel</option>
+          <option value="Kitchen &amp; Home">Kitchen &amp; Home</option>
+          <option value="Sports &amp; Outdoors">Sports &amp; Outdoors</option>
+          <option value="Beauty &amp; Personal Care">Beauty &amp; Personal Care</option>
+          <option value="Books &amp; Media">Books &amp; Media</option>
+          <option value="Toys &amp; Games">Toys &amp; Games</option>
+          <option value="Food &amp; Grocery">Food &amp; Grocery</option>
+          <option value="Health &amp; Wellness">Health &amp; Wellness</option>
+          <option value="Automotive">Automotive</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="form-group full">
+        <label>Quick-pick</label>
+        <div class="chip-group" id="suggestion-chips">
+          <span class="chip" onclick="pickProduct(this, 'Sony WH-1000XM5')">Sony WH-1000XM5</span>
+          <span class="chip" onclick="pickProduct(this, 'Apple AirPods Pro (2nd Generation)')">AirPods Pro</span>
+          <span class="chip" onclick="pickProduct(this, 'Instant Pot Duo 7-in-1')">Instant Pot</span>
+          <span class="chip" onclick="pickProduct(this, 'Nike Air Zoom Pegasus 40')">Nike Pegasus 40</span>
+          <span class="chip" onclick="pickProduct(this, 'Calvin Klein Modern Cotton T-Shirt')">CK T-Shirt</span>
+        </div>
+      </div>
+
+      <div class="form-group full">
+        <label for="key-features">Key Features <span class="label-note">(optional)</span></label>
+        <textarea id="key-features" placeholder="Describe the product's main features, e.g.:&#10;- 30-hour battery life&#10;- Active noise cancellation&#10;- Foldable design"></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Review Settings -->
+  <div class="card">
+    <div class="section-header">
+      <div class="section-icon">⚙️</div>
+      <span class="section-label">Review Settings</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <div class="form-group">
+        <label>Tone / Sentiment</label>
+        <div class="chip-group" id="sentiment-chips">
+          <span class="chip" data-value="Positive" onclick="pickChip('sentiment-chips','sentiment',this)">👍 Positive</span>
+          <span class="chip" data-value="Negative" onclick="pickChip('sentiment-chips','sentiment',this)">👎 Negative</span>
+          <span class="chip active" data-value="Mixed/Balanced" onclick="pickChip('sentiment-chips','sentiment',this)">⚖️ Mixed</span>
+          <span class="chip snob" data-value="Snob Mode" onclick="pickChip('sentiment-chips','sentiment',this)">🧐 Snob Mode</span>
+        </div>
+        <input type="hidden" id="sentiment" value="Mixed/Balanced">
+      </div>
+
+      <div class="form-group">
+        <label>Target Audience</label>
+        <div class="chip-group" id="audience-chips">
+          <span class="chip active" data-value="General Consumer" onclick="pickChip('audience-chips','target-audience',this)">General Consumer</span>
+          <span class="chip" data-value="Tech Enthusiast" onclick="pickChip('audience-chips','target-audience',this)">Tech Enthusiast</span>
+          <span class="chip" data-value="Budget Shopper" onclick="pickChip('audience-chips','target-audience',this)">Budget Shopper</span>
+          <span class="chip" data-value="Luxury Buyer" onclick="pickChip('audience-chips','target-audience',this)">Luxury Buyer</span>
+          <span class="chip" data-value="Professional / Expert" onclick="pickChip('audience-chips','target-audience',this)">Professional</span>
+          <span class="chip" data-value="Casual User" onclick="pickChip('audience-chips','target-audience',this)">Casual User</span>
+          <span class="chip" data-value="Gift Buyer" onclick="pickChip('audience-chips','target-audience',this)">Gift Buyer</span>
+          <span class="chip" data-value="Eco-Conscious Shopper" onclick="pickChip('audience-chips','target-audience',this)">Eco-Conscious</span>
+        </div>
+        <input type="hidden" id="target-audience" value="General Consumer">
+      </div>
+
+      <div class="form-group">
+        <label>Review Length</label>
+        <div class="chip-group" id="length-chips">
+          <span class="chip" data-value="short (1–2 paragraphs)" onclick="pickChip('length-chips','review-length',this)">Short</span>
+          <span class="chip active" data-value="medium (3–4 paragraphs)" onclick="pickChip('length-chips','review-length',this)">Medium</span>
+          <span class="chip" data-value="long (5+ paragraphs)" onclick="pickChip('length-chips','review-length',this)">Long</span>
+        </div>
+        <input type="hidden" id="review-length" value="medium (3–4 paragraphs)">
+      </div>
+
+      <div class="form-group" style="max-width:220px;">
+        <label for="model-select">Model</label>
+        <select id="model-select">
+          <option value="gpt-4o">gpt-4o</option>
+          <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
+          <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+        </select>
+      </div>
+
+    </div>
+
+    <div class="divider"></div>
+
+    <p class="key-hint" id="key-hint">Add an API key above to get started</p>
+    <button id="generate-btn" onclick="generateReview()" disabled>
+      <span id="btn-icon">✨</span>
+      <span id="btn-label">Generate Review</span>
+    </button>
+  </div>
+
+  <!-- Output -->
+  <div class="card" id="output-section">
+    <div class="output-header">
+      <span class="output-title" id="output-title">Review</span>
+      <div class="output-actions">
+        <button class="btn-copy" id="copy-btn" onclick="copyReview()" style="display:none">Copy</button>
+        <span class="output-meta" id="output-meta"></span>
+      </div>
+    </div>
+    <div id="output-body"></div>
+  </div>
+
+</div>
+
+<script>
+let apiKey = '';
+let reviewText = '';
+
+// ——— API Key ———
+function onKeyInput() {
+  apiKey = document.getElementById('api-key-input').value.trim();
+  updateUI();
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    let key = '';
+    for (const line of text.split(/\r?\n/)) {
+      const m = line.match(/^OPENAI_API_KEY\s*=\s*(.+)$/);
+      if (m) { key = m[1].trim().replace(/^["']|["']$/g, ''); break; }
+    }
+    if (!key) {
+      for (const line of text.split(/\r?\n/)) {
+        const m = line.match(/^[A-Z_]*API_KEY\s*=\s*(.+)$/);
+        if (m) { key = m[1].trim().replace(/^["']|["']$/g, ''); break; }
+      }
+    }
+    if (key) {
+      document.getElementById('api-key-input').value = key;
+      apiKey = key;
+      updateUI();
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function updateUI() {
+  const badge = document.getElementById('badge-key');
+  const btn   = document.getElementById('generate-btn');
+  const hint  = document.getElementById('key-hint');
+
+  if (apiKey) {
+    badge.textContent = '✓ OpenAI connected';
+    badge.className = 'connected';
+    btn.disabled = false;
+    hint.style.display = 'none';
+  } else {
+    badge.textContent = 'No API key';
+    badge.className = '';
+    btn.disabled = true;
+    hint.style.display = '';
+  }
+}
+
+// ——— Chip pickers ———
+function pickChip(groupId, hiddenId, el) {
+  document.getElementById(groupId).querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(hiddenId).value = el.dataset.value;
+
+  if (hiddenId === 'sentiment') {
+    const isSnob = el.dataset.value === 'Snob Mode';
+    document.body.classList.toggle('snob-active', isSnob);
+    document.getElementById('btn-label').textContent = isSnob ? 'Generate (if I Must)' : 'Generate Review';
+    document.getElementById('btn-icon').textContent  = isSnob ? '🧐' : '✨';
+  }
+}
+
+// ——— Product quick-pick ———
+function pickProduct(el, name) {
+  document.getElementById('product-name').value = name;
+  document.getElementById('suggestion-chips').querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ——— Copy ———
+function copyReview() {
+  if (!reviewText) return;
+  navigator.clipboard.writeText(reviewText).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ——— Generate ———
+async function generateReview() {
+  const name      = document.getElementById('product-name').value.trim();
+  const category  = document.getElementById('product-category').value;
+  const features  = document.getElementById('key-features').value.trim();
+  const sentiment = document.getElementById('sentiment').value;
+  const audience  = document.getElementById('target-audience').value;
+  const length    = document.getElementById('review-length').value;
+  const model     = document.getElementById('model-select').value;
+  const isSnob    = sentiment === 'Snob Mode';
+
+  if (!name) {
+    const inp = document.getElementById('product-name');
+    inp.focus();
+    inp.style.borderColor = 'var(--error)';
+    inp.style.boxShadow   = '0 0 0 3px rgba(220,38,38,0.12)';
+    setTimeout(() => { inp.style.borderColor = ''; inp.style.boxShadow = ''; }, 1600);
+    return;
+  }
+
+  const outputSection = document.getElementById('output-section');
+  const outputBody    = document.getElementById('output-body');
+  const outputTitle   = document.getElementById('output-title');
+  const outputMeta    = document.getElementById('output-meta');
+  const btn           = document.getElementById('generate-btn');
+  const copyBtn       = document.getElementById('copy-btn');
+
+  outputSection.style.display = 'block';
+  outputTitle.textContent = name;
+  outputMeta.textContent  = '';
+  copyBtn.style.display   = 'none';
+  reviewText = '';
+
+  outputBody.innerHTML = `
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div>
+        <div class="loading-label">Generating review<span class="loading-dots"></span></div>
+        <div class="loading-sub">${isSnob ? 'Summoning the inner critic…' : 'This may take a moment'}</div>
+      </div>
+    </div>`;
+
+  outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  btn.disabled = true;
+
+  const systemPrompt = isSnob
+    ? `You are an insufferably pretentious product critic with impeccable taste and zero patience for mediocrity. You write reviews dripping with elitism, backhanded compliments, and subtle condescension — as if slumming it by reviewing consumer goods at all. Use sophisticated vocabulary, cultural references, and light disdain. Format with markdown.`
+    : `You are an expert product reviewer. Write realistic, helpful, and detailed product reviews based on the information provided. Format your response using markdown with headings, bullet points, and emphasis where appropriate.`;
+
+  const userPrompt = `Write a ${length} ${isSnob ? 'snobbish, elitist' : sentiment} review for the following product, written specifically for a ${audience} audience:\n- Product Name: ${name}\n- Category: ${category}${features ? `\n- Key Features: ${features}` : ''}`;
+
+  const t0 = Date.now();
+
+  try {
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user',   content: userPrompt },
+        ],
+      }),
+    });
+
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
+
+    if (!resp.ok) {
+      let msg;
+      if      (resp.status === 401) msg = 'Invalid API key. Check your key and try again.';
+      else if (resp.status === 429) msg = 'Rate limit reached. Wait a moment and try again.';
+      else                          msg = `Request failed (HTTP ${resp.status}). Check your internet connection.`;
+      throw new Error(msg);
+    }
+
+    const data   = await resp.json();
+    const content = data.choices[0].message.content;
+    const tokens  = data.usage?.completion_tokens ?? null;
+
+    reviewText = content;
+    const parts = [model, elapsed + 's'];
+    if (tokens !== null) parts.push(tokens + ' tokens');
+    outputMeta.textContent = parts.join(' · ');
+    copyBtn.style.display  = '';
+
+    outputBody.innerHTML = `<div class="review-content">${marked.parse(content)}</div>`;
+
+  } catch (e) {
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
+    outputMeta.textContent = elapsed + 's';
+    let msg = esc(e.message || 'An unknown error occurred.');
+    let detail = '';
+    if (e.message && e.message.toLowerCase().includes('fetch')) {
+      detail = '<br><br><strong>Possible causes:</strong><ul style="margin:6px 0 0 1.2em"><li>A browser extension (ad blocker, Privacy Badger, etc.) is blocking the request — try disabling extensions or opening in a private window</li><li>No internet connection</li><li>Opening the file directly via <code>file://</code> — try serving it with a local server instead</li></ul>';
+    }
+    outputBody.innerHTML = `<div class="error-msg">${msg}${detail}</div>`;
+  }
+
+  btn.disabled = false;
+  updateUI();
+}
+
+// ——— Helpers ———
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    if (!document.getElementById('generate-btn').disabled) generateReview();
+  }
+});
+</script>
+</body>
+</html>
