@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Science Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <style>
+    /* ══════════════════════════════════════
+       THEME VARIABLES
+    ══════════════════════════════════════ */
+    :root {
+      --accent:        #3b6ff6;
+      --accent-glow:   rgba(59,111,246,0.18);
+      --accent-subtle: rgba(59,111,246,0.10);
+      --bg-1: #080814;
+      --surface:       rgba(255,255,255,0.04);
+      --border:        rgba(255,255,255,0.07);
+      --border-strong: rgba(255,255,255,0.13);
+      --text-1: #eeeef5;
+      --text-2: rgba(238,238,245,0.60);
+      --text-3: rgba(238,238,245,0.35);
+      --success: #4ade80;
+      --error:   #f87171;
+      --warn-bg: rgba(251,191,36,0.08);
+      --warn-border: rgba(251,191,36,0.30);
+      --warn-text: #fbbf24;
+    }
+    [data-theme="chemistry"]    { --accent:#00d4aa; --accent-glow:rgba(0,212,170,0.18);   --accent-subtle:rgba(0,212,170,0.10);   --bg-1:#010d08; }
+    [data-theme="physics"]      { --accent:#818cf8; --accent-glow:rgba(129,140,248,0.18); --accent-subtle:rgba(129,140,248,0.10); --bg-1:#050514; }
+    [data-theme="biology"]      { --accent:#4ade80; --accent-glow:rgba(74,222,128,0.18);  --accent-subtle:rgba(74,222,128,0.10);  --bg-1:#010d03; }
+    [data-theme="astronomy"]    { --accent:#c084fc; --accent-glow:rgba(192,132,252,0.18); --accent-subtle:rgba(192,132,252,0.10); --bg-1:#03020e; }
+    [data-theme="earth_science"]{ --accent:#fbbf24; --accent-glow:rgba(251,191,36,0.18);  --accent-subtle:rgba(251,191,36,0.10);  --bg-1:#0d0900; }
+    [data-theme="engineering"]  { --accent:#fb923c; --accent-glow:rgba(251,146,60,0.18);  --accent-subtle:rgba(251,146,60,0.10);  --bg-1:#0d0600; }
+
+    /* ══════════════════════════════════════
+       RESET + BASE
+    ══════════════════════════════════════ */
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg-1);
+      color: var(--text-1);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.65;
+      transition: background 0.7s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    #bg-canvas {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
+    }
+    #glow-vignette {
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, var(--accent-subtle) 0%, transparent 70%);
+      z-index: 1; pointer-events: none;
+      transition: background 0.7s ease;
+    }
+    #app { position: relative; z-index: 2; min-height: 100vh; }
+
+    /* ══════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════ */
+    header {
+      padding: 0 28px; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      position: sticky; top: 0; z-index: 20;
+      transition: border-color 0.5s ease;
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    #lab-icon { font-size: 22px; transition: all 0.5s ease; }
+    .header-title { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+    #category-badge {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+      text-transform: uppercase; padding: 3px 9px; border-radius: 999px;
+      border: 1px solid var(--accent); color: var(--accent);
+      opacity: 0; transform: scale(0.85) translateX(-4px);
+      transition: opacity 0.4s ease, transform 0.4s ease, color 0.5s ease, border-color 0.5s ease;
+    }
+    #category-badge.show { opacity: 1; transform: scale(1) translateX(0); }
+    .key-status {
+      font-size: 11px; font-weight: 600; padding: 4px 12px;
+      border-radius: 999px; border: 1px solid var(--border-strong);
+      color: var(--text-3); transition: all 0.3s ease;
+    }
+    .key-status.active {
+      color: var(--success); border-color: rgba(74,222,128,0.35);
+      background: rgba(74,222,128,0.07);
+    }
+
+    /* ══════════════════════════════════════
+       MAIN / HERO
+    ══════════════════════════════════════ */
+    main { max-width: 740px; margin: 0 auto; padding: 52px 24px 100px; }
+
+    .hero { text-align: center; margin-bottom: 52px; }
+    .hero-eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 14px; transition: color 0.5s ease;
+    }
+    .hero-title {
+      font-size: clamp(30px,6vw,48px); font-weight: 700;
+      letter-spacing: -1.5px; line-height: 1.05; margin-bottom: 16px;
+      background: linear-gradient(140deg, var(--text-1) 30%, var(--accent) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; transition: all 0.5s ease;
+    }
+    .hero-sub { font-size: 14px; color: var(--text-2); max-width: 400px; margin: 0 auto; line-height: 1.7; }
+
+    /* ══════════════════════════════════════
+       CARDS
+    ══════════════════════════════════════ */
+    .glass-card {
+      background: var(--surface);
+      border: 1px solid var(--border); border-radius: 18px;
+      padding: 24px 26px; margin-bottom: 14px;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      transition: border-color 0.5s ease;
+    }
+    .glass-card:hover { border-color: var(--border-strong); }
+    .card-label {
+      font-size: 9.5px; font-weight: 700; letter-spacing: 0.11em;
+      text-transform: uppercase; color: var(--text-3); margin-bottom: 16px;
+    }
+
+    /* ══════════════════════════════════════
+       API KEY
+    ══════════════════════════════════════ */
+    .key-row { display: flex; gap: 8px; align-items: center; }
+    .key-row input {
+      flex: 1; padding: 10px 14px;
+      border: 1px solid var(--border-strong); border-radius: 10px;
+      background: rgba(0,0,0,0.35); color: var(--text-1);
+      font-family: 'DM Mono', monospace; font-size: 13px;
+      outline: none; transition: border-color 0.2s;
+    }
+    .key-row input:focus { border-color: var(--accent); }
+    .privacy-note { margin-top: 10px; font-size: 11px; color: var(--text-3); }
+
+    /* ══════════════════════════════════════
+       BUTTONS (shared)
+    ══════════════════════════════════════ */
+    .btn-ghost {
+      padding: 10px 16px;
+      border: 1px solid var(--border-strong); border-radius: 10px;
+      background: rgba(255,255,255,0.03); color: var(--text-2);
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      cursor: pointer; white-space: nowrap; transition: all 0.2s ease;
+    }
+    .btn-ghost:hover { background: var(--accent-subtle); border-color: var(--accent); color: var(--accent); }
+
+    .btn-icon {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px;
+      border: 1px solid var(--border-strong); border-radius: 9px;
+      background: rgba(255,255,255,0.03); color: var(--text-2);
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      cursor: pointer; white-space: nowrap; transition: all 0.2s ease;
+    }
+    .btn-icon:hover { background: var(--accent-subtle); border-color: var(--accent); color: var(--accent); }
+    .btn-icon:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-icon.danger:hover { background: rgba(248,113,113,0.07); border-color: var(--error); color: var(--error); }
+
+    /* ══════════════════════════════════════
+       FORM
+    ══════════════════════════════════════ */
+    .form-group { margin-bottom: 20px; }
+    label {
+      display: block; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 9px;
+    }
+    textarea {
+      width: 100%; padding: 11px 14px;
+      border: 1px solid var(--border-strong); border-radius: 10px;
+      background: rgba(0,0,0,0.35); color: var(--text-1);
+      font-family: inherit; font-size: 14px; outline: none;
+      resize: vertical; min-height: 90px; transition: border-color 0.2s;
+    }
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--text-3); }
+
+    /* Supply picker */
+    .supply-picker-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .supply-picker-row select {
+      flex: 1; padding: 9px 34px 9px 12px;
+      border: 1px solid var(--border-strong); border-radius: 10px;
+      background: rgba(0,0,0,0.35); color: var(--text-2);
+      font-family: inherit; font-size: 13px;
+      outline: none; cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 11 11'%3E%3Cpath fill='%23666' d='M5.5 7.5L1 3h9z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      transition: border-color 0.2s;
+    }
+    .supply-picker-row select:focus { border-color: var(--accent); }
+    .supply-picker-row select option { background: #1a1a2a; color: #eeeef5; }
+
+    .btn-clear-supplies {
+      padding: 9px 14px;
+      border: 1px solid var(--border-strong); border-radius: 10px;
+      background: rgba(255,255,255,0.03); color: var(--text-3);
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      cursor: pointer; white-space: nowrap; transition: all 0.2s;
+    }
+    .btn-clear-supplies:hover { border-color: var(--error); color: var(--error); background: rgba(248,113,113,0.07); }
+
+    /* Grade pills */
+    .grade-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+    .grade-btn {
+      padding: 10px 6px;
+      border: 1px solid var(--border-strong); border-radius: 10px;
+      background: rgba(0,0,0,0.25); color: var(--text-2);
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-align: center; transition: all 0.18s ease;
+    }
+    .grade-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-subtle); }
+    .grade-btn.selected { border-color: var(--accent); background: var(--accent-subtle); color: var(--accent); }
+
+    /* Student count row */
+    .settings-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;
+    }
+    .settings-row .form-group { margin-bottom: 0; }
+    input[type="number"] {
+      width: 100%; padding: 10px 14px;
+      border: 1px solid var(--border-strong); border-radius: 10px;
+      background: rgba(0,0,0,0.35); color: var(--text-1);
+      font-family: inherit; font-size: 14px; outline: none;
+      transition: border-color 0.2s;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    input[type="number"]::-webkit-inner-spin-button { opacity: 0.4; }
+    input[type="number"]:focus { border-color: var(--accent); }
+
+    /* ══════════════════════════════════════
+       GENERATE BUTTON
+    ══════════════════════════════════════ */
+    .btn-generate {
+      width: 100%; padding: 14px;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 12px; font-family: inherit;
+      font-size: 15px; font-weight: 700; letter-spacing: -0.2px;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: box-shadow 0.3s ease, opacity 0.2s ease, transform 0.12s ease;
+    }
+    .btn-generate::after {
+      content:''; position: absolute; inset: 0;
+      background: linear-gradient(135deg,rgba(255,255,255,0.16) 0%,transparent 55%);
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .btn-generate:hover:not(:disabled)::after { opacity: 1; }
+    .btn-generate:hover:not(:disabled) {
+      box-shadow: 0 0 36px var(--accent-glow), 0 4px 20px rgba(0,0,0,0.4);
+      transform: translateY(-1px);
+    }
+    .btn-generate:active:not(:disabled) { transform: translateY(0); }
+    .btn-generate:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* ══════════════════════════════════════
+       OUTPUT
+    ══════════════════════════════════════ */
+    #output-section { display: none; margin-top: 14px; }
+    #output-section.visible { display: block; animation: riseIn 0.5s cubic-bezier(0.4,0,0.2,1); }
+    @keyframes riseIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+    .output-card {
+      background: var(--surface);
+      border: 1px solid var(--border); border-radius: 20px; padding: 32px;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      position: relative; overflow: hidden;
+      transition: border-color 0.6s ease, box-shadow 0.6s ease;
+    }
+    .output-card::before {
+      content:''; position: absolute; top:0; left:12%; right:12%; height:1px;
+      background: linear-gradient(90deg,transparent,var(--accent),transparent);
+      opacity:0; transition: opacity 0.6s ease;
+    }
+    .output-card.themed { border-color:var(--accent-glow); box-shadow:0 0 70px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,0.04); }
+    .output-card.themed::before { opacity:1; }
+
+    /* Experiment header */
+    .exp-header {
+      display: flex; align-items: flex-start; gap: 14px;
+      margin-bottom: 16px; padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .exp-icon { font-size: 36px; line-height:1; flex-shrink:0; }
+    .exp-meta { flex: 1; min-width: 0; }
+    .exp-meta-top { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+    .exp-category-label {
+      font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent);
+      transition: color 0.5s ease;
+    }
+    .difficulty-dots { display: flex; gap: 3px; align-items: center; }
+    .difficulty-dots span {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--border-strong); transition: background 0.3s;
+    }
+    .difficulty-dots span.lit { background: var(--accent); }
+    .exp-title { font-size: 21px; font-weight: 700; letter-spacing: -0.4px; line-height: 1.2; }
+
+    /* Action buttons row */
+    .action-row {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    /* Safety banner */
+    .safety-banner {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      border-radius: 12px; padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+    .safety-banner-icon { font-size: 18px; flex-shrink:0; line-height:1.3; }
+    .safety-banner-body { flex: 1; }
+    .safety-banner-label {
+      font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--warn-text); margin-bottom: 4px;
+    }
+    .safety-banner-text { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+
+    /* DALL-E image */
+    #diagram-section { margin-bottom: 20px; display: none; }
+    .diagram-loading {
+      height: 120px; display: flex; align-items: center; justify-content: center;
+      gap: 10px; border: 1px dashed var(--border-strong); border-radius: 12px;
+      color: var(--text-3); font-size: 13px;
+    }
+    .diagram-spinner {
+      width: 16px; height: 16px; border: 2px solid var(--border-strong);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #diagram-img {
+      width: 100%; border-radius: 12px; display: none;
+      border: 1px solid var(--border);
+    }
+
+    /* ══════════════════════════════════════
+       LOADING
+    ══════════════════════════════════════ */
+    .loading-state {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 18px; padding: 52px 24px;
+    }
+    .loading-icon { font-size: 44px; animation: levitate 2.2s ease-in-out infinite; }
+    @keyframes levitate {
+      0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-10px) rotate(3deg)}
+    }
+    .loading-text { font-size: 14px; font-weight: 500; color: var(--text-2); }
+    .loading-dots { display: flex; gap: 7px; }
+    .loading-dots span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent); animation: pulse-dot 1.3s ease-in-out infinite;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.22s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.44s; }
+    @keyframes pulse-dot { 0%,80%,100%{transform:scale(0.7);opacity:0.4} 40%{transform:scale(1.2);opacity:1} }
+
+    /* ══════════════════════════════════════
+       ERROR
+    ══════════════════════════════════════ */
+    .error-state {
+      background: rgba(248,113,113,0.07); border:1px solid rgba(248,113,113,0.28);
+      border-radius: 12px; padding: 16px 20px; color: var(--error);
+      font-size: 14px; display: flex; align-items: flex-start; gap: 10px;
+    }
+    .error-state::before { content:'⚠'; flex-shrink:0; }
+
+    /* ══════════════════════════════════════
+       RESULT MARKDOWN
+    ══════════════════════════════════════ */
+    #result-content { line-height: 1.8; }
+    #result-content h1 { display: none; }
+    #result-content h2 {
+      font-size: 10px; font-weight: 800; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent);
+      margin-top: 30px; padding-top: 22px;
+      border-top: 1px solid var(--border); transition: color 0.5s ease;
+    }
+    #result-content h2:first-of-type { margin-top:0; padding-top:0; border-top:none; }
+    #result-content h3 { font-size:15px; font-weight:700; color:var(--text-1); margin-top:14px; }
+    #result-content p { color:var(--text-2); font-size:14px; margin-top:10px; }
+    #result-content ul, #result-content ol {
+      padding-left:18px; color:var(--text-2); font-size:14px; margin-top:10px;
+    }
+    #result-content li { margin-bottom:7px; }
+    #result-content li::marker { color:var(--accent); }
+    #result-content strong { font-weight:700; color:var(--text-1); }
+    #result-content em { font-style:italic; opacity:0.8; }
+    #result-content code {
+      font-family:'DM Mono',monospace; font-size:12.5px;
+      background:rgba(255,255,255,0.07); border-radius:5px; padding:1px 6px;
+    }
+
+    /* Materials checklist */
+    li.material-item { display: flex; align-items: baseline; gap: 8px; cursor: default; }
+    li.material-item.checked { opacity: 0.45; text-decoration: line-through; }
+    .material-check {
+      flex-shrink: 0; width: 14px; height: 14px;
+      accent-color: var(--accent); cursor: pointer; margin-top: 1px;
+    }
+
+    /* Staggered reveal */
+    #result-content > * { opacity:0; transform:translateY(10px); }
+    #result-content.ready > * { opacity:1; transform:translateY(0); transition:opacity 0.4s ease,transform 0.4s ease; }
+
+    /* Streaming cursor */
+    #result-content.streaming::after {
+      content: '▍'; color: var(--accent);
+      animation: blink 0.8s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ══════════════════════════════════════
+       HISTORY
+    ══════════════════════════════════════ */
+    #history-section { margin-top: 32px; }
+    .history-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .history-title {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-3);
+    }
+    .btn-clear-history {
+      font-size: 11px; font-weight: 600; color: var(--text-3);
+      background: none; border: none; cursor: pointer; padding: 2px 6px;
+      transition: color 0.2s;
+    }
+    .btn-clear-history:hover { color: var(--error); }
+    .history-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 10px; }
+    .history-card {
+      background: var(--surface);
+      border: 1px solid var(--border); border-radius: 12px; padding: 14px;
+      cursor: pointer; transition: all 0.2s ease;
+    }
+    .history-card:hover { border-color: var(--accent); background: var(--accent-subtle); }
+    .history-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .history-card-icon { font-size: 20px; }
+    .history-card-cat {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-3);
+    }
+    .history-card-title { font-size: 13px; font-weight: 600; line-height: 1.3; margin-bottom: 6px; }
+    .history-card-meta { font-size: 11px; color: var(--text-3); }
+
+    /* ══════════════════════════════════════
+       THEME FLASH
+    ══════════════════════════════════════ */
+    .theme-flash {
+      position: fixed; inset: 0; background: var(--accent);
+      z-index: 999; pointer-events: none;
+      animation: flashOut 0.7s ease-out forwards;
+    }
+    @keyframes flashOut { 0%{opacity:0.22} 100%{opacity:0} }
+
+    /* ══════════════════════════════════════
+       PRINT
+    ══════════════════════════════════════ */
+    @media print {
+      #bg-canvas, #glow-vignette, header, .hero, .glass-card,
+      .action-row, #diagram-section, #history-section,
+      .theme-flash { display: none !important; }
+      body { background: #fff !important; color: #111 !important; }
+      .output-card {
+        border: none !important; box-shadow: none !important;
+        padding: 0 !important; backdrop-filter: none !important;
+      }
+      .exp-category-label { color: #555 !important; }
+      .exp-title { color: #111 !important; }
+      .safety-banner { background: #fffbeb !important; border-color: #d97706 !important; }
+      .safety-banner-label { color: #92400e !important; }
+      .safety-banner-text { color: #333 !important; }
+      #result-content h2 { color: #555 !important; border-color: #ccc !important; }
+      #result-content p, #result-content li { color: #333 !important; }
+      #result-content strong { color: #111 !important; }
+      #result-content > * { opacity: 1 !important; transform: none !important; }
+      .difficulty-dots span.lit { background: #555 !important; }
+    }
+  </style>
+</head>
+<body data-theme="default">
+
+<canvas id="bg-canvas"></canvas>
+<div id="glow-vignette"></div>
+
+<div id="app">
+
+  <header>
+    <div class="header-left">
+      <span id="lab-icon">🧪</span>
+      <span class="header-title">Science Lab</span>
+      <span id="category-badge"></span>
+    </div>
+    <span id="key-badge" class="key-status">No key</span>
+  </header>
+
+  <main>
+
+    <div class="hero">
+      <div class="hero-eyebrow">AI-Powered Learning</div>
+      <h1 class="hero-title">Generate Your<br>Science Experiment</h1>
+      <p class="hero-sub">List your supplies and pick a grade level — get a full hands-on experiment built just for you.</p>
+    </div>
+
+    <!-- API Key -->
+    <div class="glass-card">
+      <div class="card-label">OpenAI API Key</div>
+      <div class="key-row">
+        <input type="password" id="api-key-input" placeholder="sk-…" autocomplete="off" spellcheck="false" oninput="onKeyInput()">
+        <button class="btn-ghost" onclick="document.getElementById('env-file').click()">Upload .env</button>
+        <input type="file" id="env-file" accept=".env,text/plain" style="display:none" onchange="handleEnvUpload(event)">
+      </div>
+      <p class="privacy-note">Stays in memory only — never saved, never transmitted elsewhere.</p>
+    </div>
+
+    <!-- Settings -->
+    <div class="glass-card">
+      <div class="card-label">Experiment Settings</div>
+
+      <div class="form-group">
+        <label>Grade Level</label>
+        <div class="grade-grid">
+          <button class="grade-btn selected" data-grade="K–2"  onclick="selectGrade(this)">K–2</button>
+          <button class="grade-btn"          data-grade="3–5"  onclick="selectGrade(this)">3–5</button>
+          <button class="grade-btn"          data-grade="6–8"  onclick="selectGrade(this)">6–8</button>
+          <button class="grade-btn"          data-grade="9–12" onclick="selectGrade(this)">9–12</button>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div class="form-group">
+          <label for="student-count">Number of Students</label>
+          <input type="number" id="student-count" value="1" min="1" max="200">
+        </div>
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <!-- spacer -->
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="supplies">Available Supplies</label>
+        <div class="supply-picker-row">
+          <select id="supply-picker" onchange="addSupply(this)">
+            <option value="" disabled selected>+ Add a common supply…</option>
+            <optgroup label="Liquids &amp; Solutions">
+              <option>Water</option>
+              <option>White vinegar</option>
+              <option>Apple cider vinegar</option>
+              <option>Vegetable oil</option>
+              <option>Dish soap</option>
+              <option>Lemon juice</option>
+              <option>Milk</option>
+              <option>Hydrogen peroxide (3%)</option>
+              <option>Rubbing alcohol</option>
+            </optgroup>
+            <optgroup label="Powders &amp; Solids">
+              <option>Baking soda</option>
+              <option>Table salt</option>
+              <option>Sugar</option>
+              <option>Cornstarch</option>
+              <option>Baking powder</option>
+              <option>Flour</option>
+              <option>Activated charcoal</option>
+            </optgroup>
+            <optgroup label="Containers &amp; Tools">
+              <option>Plastic bottle (2L)</option>
+              <option>Plastic cup</option>
+              <option>Ziplock bag</option>
+              <option>Mixing bowl</option>
+              <option>Measuring cup</option>
+              <option>Spoon</option>
+              <option>Funnel</option>
+              <option>Coffee filter</option>
+            </optgroup>
+            <optgroup label="Craft &amp; Household">
+              <option>Balloon</option>
+              <option>String</option>
+              <option>Tape</option>
+              <option>Paper towel</option>
+              <option>Rubber band</option>
+              <option>Paper clips</option>
+              <option>Aluminum foil</option>
+              <option>Toothpicks</option>
+              <option>Tissue paper</option>
+            </optgroup>
+            <optgroup label="Food &amp; Kitchen">
+              <option>Food coloring</option>
+              <option>Egg</option>
+              <option>Active dry yeast</option>
+              <option>Gelatin (unflavored)</option>
+              <option>Candle</option>
+            </optgroup>
+            <optgroup label="Science Equipment">
+              <option>Magnifying glass</option>
+              <option>Thermometer</option>
+              <option>Ruler</option>
+              <option>Stopwatch</option>
+              <option>Magnet</option>
+              <option>Test tube (or pill bottle)</option>
+            </optgroup>
+            <optgroup label="Electronics (Basic)">
+              <option>AA battery</option>
+              <option>LED bulb</option>
+              <option>Copper wire</option>
+              <option>Steel wool</option>
+            </optgroup>
+            <optgroup label="Nature">
+              <option>Soil / dirt</option>
+              <option>Sand</option>
+              <option>Small rocks</option>
+              <option>Leaves</option>
+              <option>Seeds</option>
+            </optgroup>
+          </select>
+          <button class="btn-clear-supplies" onclick="clearSupplies()">Clear</button>
+        </div>
+        <textarea id="supplies" placeholder="e.g. baking soda, vinegar, food coloring, balloon, string…"></textarea>
+      </div>
+
+      <button class="btn-generate" id="generate-btn" onclick="generate()" disabled>
+        ✦ Generate Experiment
+      </button>
+    </div>
+
+    <!-- Output -->
+    <div id="output-section">
+      <div class="output-card" id="output-card">
+
+        <div id="loading-state" class="loading-state" style="display:none">
+          <span class="loading-icon" id="loading-icon">🔬</span>
+          <span class="loading-text" id="loading-text">Designing your experiment…</span>
+          <div class="loading-dots"><span></span><span></span><span></span></div>
+        </div>
+
+        <div id="error-state" class="error-state" style="display:none"></div>
+
+        <div id="result-wrapper" style="display:none">
+
+          <!-- Experiment header -->
+          <div class="exp-header">
+            <span class="exp-icon" id="exp-icon">🧪</span>
+            <div class="exp-meta">
+              <div class="exp-meta-top">
+                <div class="exp-category-label" id="exp-category-label">Science</div>
+                <div class="difficulty-dots" id="difficulty-dots">
+                  <span></span><span></span><span></span><span></span><span></span>
+                </div>
+              </div>
+              <div class="exp-title" id="exp-title">Experiment</div>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="action-row">
+            <button class="btn-icon" onclick="regenerate()" id="regen-btn">↺ Try Again</button>
+            <button class="btn-icon" onclick="copyExperiment()" id="copy-btn">⎘ Copy</button>
+            <button class="btn-icon" onclick="window.print()">🖨 Print</button>
+            <button class="btn-icon" onclick="generateDiagram()" id="diagram-btn">🎨 Illustrate</button>
+          </div>
+
+          <!-- Safety banner (shown when safety text present) -->
+          <div class="safety-banner" id="safety-banner" style="display:none">
+            <span class="safety-banner-icon">⚠️</span>
+            <div class="safety-banner-body">
+              <div class="safety-banner-label">Safety Notes</div>
+              <div class="safety-banner-text" id="safety-text"></div>
+            </div>
+          </div>
+
+          <!-- DALL-E diagram -->
+          <div id="diagram-section">
+            <div class="diagram-loading" id="diagram-loading">
+              <div class="diagram-spinner"></div>
+              <span>Generating illustration…</span>
+            </div>
+            <img id="diagram-img" alt="Experiment illustration">
+          </div>
+
+          <!-- Markdown content -->
+          <div id="result-content"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- History -->
+    <div id="history-section" style="display:none">
+      <div class="history-header">
+        <span class="history-title">Recent Experiments</span>
+        <button class="btn-clear-history" onclick="clearHistory()">Clear all</button>
+      </div>
+      <div class="history-grid" id="history-grid"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// THEME MAP
+// ════════════════════════════════════════
+const THEMES = {
+  default:      { name:'Science Lab',    icon:'🧪', particles:'dots',    loadIcon:'🔬' },
+  chemistry:    { name:'Chemistry',      icon:'⚗️', particles:'bubbles', loadIcon:'⚗️' },
+  physics:      { name:'Physics',        icon:'⚡', particles:'sparks',  loadIcon:'⚡' },
+  biology:      { name:'Biology',        icon:'🧬', particles:'cells',   loadIcon:'🧫' },
+  astronomy:    { name:'Astronomy',      icon:'🔭', particles:'stars',   loadIcon:'🌌' },
+  earth_science:{ name:'Earth Science',  icon:'🌍', particles:'crystals',loadIcon:'🪨' },
+  engineering:  { name:'Engineering',    icon:'⚙️', particles:'gears',   loadIcon:'🔩' },
+};
+
+let currentTheme = 'default';
+let selectedGrade = 'K–2';
+let apiKey = '';
+
+let lastSupplies = '';
+let lastMeta = null;
+let lastMarkdown = '';
+let currentImagePrompt = '';
+
+// Throttle stream re-renders to one per animation frame
+let latestStreamMarkdown = '';
+let pendingRender = false;
+
+// ════════════════════════════════════════
+// PARTICLE ENGINE
+// ════════════════════════════════════════
+const canvas = document.getElementById('bg-canvas');
+const ctx    = canvas.getContext('2d');
+let particles = [];
+let raf;
+
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { resizeCanvas(); initParticles(); }, 150);
+});
+resizeCanvas();
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) cancelAnimationFrame(raf);
+  else loop();
+});
+
+function getAccentRgba(alpha) {
+  const RGB = {
+    default:'59,111,246', chemistry:'0,212,170', physics:'129,140,248',
+    biology:'74,222,128', astronomy:'192,132,252', earth_science:'251,191,36',
+    engineering:'251,146,60',
+  };
+  return `rgba(${RGB[currentTheme]||RGB.default},${alpha})`;
+}
+
+function makeParticle(type) {
+  const p = { type, x:Math.random()*canvas.width, y:Math.random()*canvas.height,
+    size:0, opacity:0, vx:0, vy:0, angle:Math.random()*Math.PI*2, angleV:0,
+    pulse:Math.random()*Math.PI*2, life:0, maxLife:0 };
+  if (type==='bubbles') {
+    p.size=3+Math.random()*14; p.opacity=0.08+Math.random()*0.22;
+    p.vx=(Math.random()-0.5)*0.28; p.vy=-(0.15+Math.random()*0.45);
+    p.wobble=Math.random()*Math.PI*2; p.wobbleV=0.018+Math.random()*0.025;
+  } else if (type==='sparks') {
+    p.size=1+Math.random()*2; p.opacity=0.5+Math.random()*0.5;
+    p.vx=(Math.random()-0.5)*1.6; p.vy=(Math.random()-0.5)*1.6;
+    p.maxLife=70+Math.random()*100; p.life=Math.random()*p.maxLife; p.trail=[];
+  } else if (type==='cells') {
+    p.size=10+Math.random()*22; p.opacity=0.03+Math.random()*0.08;
+    p.vx=(Math.random()-0.5)*0.18; p.vy=(Math.random()-0.5)*0.18;
+    p.innerSize=p.size*(0.28+Math.random()*0.28);
+  } else if (type==='stars') {
+    p.size=0.5+Math.random()*2; p.opacity=0.3+Math.random()*0.7;
+    p.twinkle=0.018+Math.random()*0.035; p.shoot=(Math.random()<0.015);
+    if (p.shoot) { p.vx=3.5+Math.random()*4; p.vy=0.8+Math.random()*1.6;
+      p.maxLife=45+Math.random()*40; p.trail=[]; }
+  } else if (type==='crystals') {
+    p.size=4+Math.random()*10; p.opacity=0.08+Math.random()*0.18;
+    p.vx=(Math.random()-0.5)*0.14; p.vy=(Math.random()-0.5)*0.14;
+    p.sides=3+Math.floor(Math.random()*3); p.angleV=(Math.random()-0.5)*0.009;
+  } else if (type==='gears') {
+    p.size=12+Math.random()*28; p.opacity=0.04+Math.random()*0.08;
+    p.vx=(Math.random()-0.5)*0.09; p.vy=(Math.random()-0.5)*0.09;
+    p.teeth=6+Math.floor(Math.random()*6); p.angleV=(Math.random()-0.5)*0.007;
+  } else {
+    p.size=1.5+Math.random()*3; p.opacity=0.08+Math.random()*0.22;
+    p.vx=(Math.random()-0.5)*0.28; p.vy=(Math.random()-0.5)*0.28;
+  }
+  return p;
+}
+
+function initParticles() {
+  const type = (THEMES[currentTheme]||THEMES.default).particles;
+  const count = Math.max(20, Math.floor((canvas.width*canvas.height)/16000));
+  particles = Array.from({length:count}, ()=>makeParticle(type));
+}
+
+function updateParticle(p) {
+  p.x+=p.vx; p.y+=p.vy; p.angle+=p.angleV; p.pulse+=0.028;
+  if (p.type==='bubbles') {
+    p.wobble+=p.wobbleV; p.x+=Math.sin(p.wobble)*0.35;
+    if (p.y<-p.size*2) { p.y=canvas.height+p.size; p.x=Math.random()*canvas.width; }
+    return;
+  }
+  if (p.type==='sparks') {
+    p.life++; p.trail.push({x:p.x,y:p.y}); if(p.trail.length>7) p.trail.shift();
+    if (p.life>p.maxLife) { Object.assign(p,makeParticle('sparks')); p.x=Math.random()*canvas.width; p.y=Math.random()*canvas.height; }
+    return;
+  }
+  if (p.type==='stars') {
+    p.opacity=0.15+0.7*(0.5+0.5*Math.sin(p.pulse));
+    if (p.shoot) {
+      p.life++; p.trail.push({x:p.x,y:p.y}); if(p.trail.length>12) p.trail.shift();
+      if (p.life>p.maxLife||p.x>canvas.width) { p.x=Math.random()*canvas.width*0.4; p.y=Math.random()*canvas.height*0.4; p.life=0; p.trail=[]; }
+    }
+    return;
+  }
+  if(p.x<-60) p.x=canvas.width+60; if(p.x>canvas.width+60) p.x=-60;
+  if(p.y<-60) p.y=canvas.height+60; if(p.y>canvas.height+60) p.y=-60;
+}
+
+function drawParticle(p) {
+  const col=getAccentRgba(p.opacity); ctx.save();
+  if (p.type==='bubbles') {
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+    ctx.strokeStyle=col; ctx.lineWidth=0.9; ctx.stroke();
+    ctx.beginPath(); ctx.arc(p.x-p.size*0.28,p.y-p.size*0.28,p.size*0.18,0,Math.PI*2);
+    ctx.fillStyle=getAccentRgba(p.opacity*0.55); ctx.fill();
+  } else if (p.type==='sparks') {
+    if (p.trail.length>1) { ctx.beginPath(); ctx.moveTo(p.trail[0].x,p.trail[0].y);
+      p.trail.forEach(t=>ctx.lineTo(t.x,t.y)); ctx.strokeStyle=col; ctx.lineWidth=p.size; ctx.lineCap='round'; ctx.stroke(); }
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fillStyle=col; ctx.fill();
+  } else if (p.type==='cells') {
+    ctx.translate(p.x,p.y); ctx.beginPath(); ctx.arc(0,0,p.size,0,Math.PI*2);
+    ctx.strokeStyle=col; ctx.lineWidth=0.8; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,p.innerSize,0,Math.PI*2);
+    ctx.strokeStyle=getAccentRgba(p.opacity*0.5); ctx.lineWidth=0.5; ctx.stroke();
+  } else if (p.type==='stars') {
+    if (p.shoot&&p.trail.length>1) {
+      const g=ctx.createLinearGradient(p.trail[0].x,p.trail[0].y,p.x,p.y);
+      g.addColorStop(0,getAccentRgba(0)); g.addColorStop(1,getAccentRgba(p.opacity));
+      ctx.beginPath(); ctx.moveTo(p.trail[0].x,p.trail[0].y); ctx.lineTo(p.x,p.y);
+      ctx.strokeStyle=g; ctx.lineWidth=1.5; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${p.opacity})`; ctx.fill();
+  } else if (p.type==='crystals') {
+    ctx.translate(p.x,p.y); ctx.rotate(p.angle); ctx.beginPath();
+    for(let i=0;i<p.sides;i++) { const a=(i/p.sides)*Math.PI*2;
+      i===0?ctx.moveTo(Math.cos(a)*p.size,Math.sin(a)*p.size):ctx.lineTo(Math.cos(a)*p.size,Math.sin(a)*p.size); }
+    ctx.closePath(); ctx.strokeStyle=col; ctx.lineWidth=0.9; ctx.stroke();
+  } else if (p.type==='gears') {
+    ctx.translate(p.x,p.y); ctx.rotate(p.angle);
+    const th=p.size*0.26, ir=p.size-th; ctx.beginPath();
+    for(let i=0;i<p.teeth*2;i++) { const a=(i/(p.teeth*2))*Math.PI*2,r=i%2===0?p.size:ir;
+      i===0?ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r):ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r); }
+    ctx.closePath(); ctx.strokeStyle=col; ctx.lineWidth=0.9; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,ir*0.32,0,Math.PI*2); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fillStyle=col; ctx.fill();
+  }
+  ctx.restore();
+}
+
+function loop() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach(p=>{ updateParticle(p); drawParticle(p); });
+  raf=requestAnimationFrame(loop);
+}
+initParticles(); loop();
+
+// ════════════════════════════════════════
+// THEME
+// ════════════════════════════════════════
+function applyTheme(key) {
+  if (key===currentTheme) return;
+  currentTheme=key;
+  const theme=THEMES[key]||THEMES.default;
+  const flash=document.createElement('div'); flash.className='theme-flash';
+  document.body.appendChild(flash); setTimeout(()=>flash.remove(),700);
+  document.body.dataset.theme=key;
+  document.getElementById('lab-icon').textContent=theme.icon;
+  initParticles();
+}
+
+// ════════════════════════════════════════
+// SUPPLY PICKER
+// ════════════════════════════════════════
+function addSupply(select) {
+  const val=select.value; if(!val) return;
+  const ta=document.getElementById('supplies');
+  const cur=ta.value.trim();
+  ta.value=cur?cur+', '+val:val;
+  select.selectedIndex=0; ta.focus();
+}
+function clearSupplies() {
+  document.getElementById('supplies').value='';
+  document.getElementById('supply-picker').selectedIndex=0;
+}
+
+// ════════════════════════════════════════
+// GRADE SELECTOR
+// ════════════════════════════════════════
+function selectGrade(btn) {
+  document.querySelectorAll('.grade-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected'); selectedGrade=btn.dataset.grade;
+}
+
+// ════════════════════════════════════════
+// API KEY
+// ════════════════════════════════════════
+function onKeyInput() { setKey(document.getElementById('api-key-input').value.trim()); }
+function setKey(key) {
+  apiKey=key;
+  const badge=document.getElementById('key-badge');
+  const btn=document.getElementById('generate-btn');
+  if (key) { badge.textContent='Key loaded'; badge.className='key-status active'; btn.disabled=false; }
+  else     { badge.textContent='No key';     badge.className='key-status';         btn.disabled=true; }
+}
+function handleEnvUpload(event) {
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    let key='';
+    for (const line of e.target.result.split(/\r?\n/)) {
+      const m=line.match(/^OPENAI_API_KEY\s*=\s*(.+)$/);
+      if(m) { key=m[1].trim().replace(/^["']|["']$/g,''); break; }
+    }
+    if(key) { document.getElementById('api-key-input').value=key; setKey(key); }
+    else showError('Could not find OPENAI_API_KEY in the uploaded file.');
+  };
+  reader.readAsText(file); event.target.value='';
+}
+
+// ════════════════════════════════════════
+// GENERATE (streaming)
+// ════════════════════════════════════════
+async function generate() {
+  const supplies = document.getElementById('supplies').value.trim();
+  const students = parseInt(document.getElementById('student-count').value,10) || 1;
+  if (!apiKey)   { showError('Please enter your OpenAI API key first.'); return; }
+  if (!supplies) { showError('Please list at least a few supplies.'); return; }
+
+  lastSupplies = supplies;
+  lastMeta = null; lastMarkdown = ''; currentImagePrompt = '';
+
+  showLoading();
+
+  const studentNote = students > 1
+    ? `Scale all ingredient quantities for ${students} students working together.`
+    : '';
+
+  const systemPrompt = `You are a science education expert who creates safe, engaging, hands-on experiments for K-12 students.
+
+Given a grade level and supplies, produce ONE complete experiment.
+
+Your response MUST start with a single line containing ONLY a JSON object (no backticks, no label, just raw JSON):
+{"category":"...","title":"...","difficulty":N,"safety":"...","image_prompt":"..."}
+
+Fields:
+- category: one of chemistry, physics, biology, astronomy, earth_science, engineering
+- title: short catchy title, no "Experiment:" prefix
+- difficulty: integer 1-5 (1=very easy, 5=advanced)
+- safety: one or two sentences about safety precautions. If none needed write "No special precautions needed."
+- image_prompt: a concise DALL-E prompt for an educational diagram of this experiment (under 30 words)
+
+Then a blank line, then the full experiment in markdown with these sections:
+## Overview
+## Materials
+## Procedure
+## What's Happening
+## Going Further
+
+Include exact measurements in the Materials section (e.g. "2 tablespoons baking soda").
+${studentNote}
+Only use provided materials. Match language complexity to the grade.`;
+
+  let resp;
+  try {
+    resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization':`Bearer ${apiKey}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role:'system', content:systemPrompt },
+          { role:'user',   content:`Grade level: ${selectedGrade}\nSupplies: ${supplies}` },
+        ],
+        stream: true,
+      }),
+    });
+  } catch(err) { showError(`Network error: ${err.message}`); return; }
+
+  if (!resp.ok) {
+    let detail='';
+    try { const d=await resp.json(); detail=d?.error?.message||''; } catch(_){}
+    showError(`API error ${resp.status}: ${detail||resp.statusText}`);
+    return;
+  }
+
+  const reader  = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let rawBuf    = '';    // accumulates raw SSE text
+  let textBuf   = '';   // accumulates decoded content tokens
+  let metaParsed = false;
+  let meta = null;
+  let markdownBuf = '';
+
+  const content = document.getElementById('result-content');
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      rawBuf += decoder.decode(value, { stream:true });
+      const lines = rawBuf.split('\n');
+      rawBuf = lines.pop(); // keep incomplete line
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        let chunk;
+        try { chunk = JSON.parse(data); } catch { continue; }
+        const delta = chunk.choices?.[0]?.delta?.content || '';
+        if (!delta) continue;
+
+        textBuf += delta;
+
+        if (!metaParsed) {
+          // Look for the blank line separator between JSON and markdown
+          const sep = textBuf.indexOf('\n\n');
+          if (sep !== -1) {
+            const jsonLine = textBuf.slice(0, sep).trim()
+              .replace(/^```json?\s*/,'').replace(/\s*```$/,'');
+            try {
+              meta = JSON.parse(jsonLine);
+              metaParsed = true;
+              lastMeta = meta;
+              currentImagePrompt = meta.image_prompt || '';
+
+              // Apply theme + show header immediately
+              applyTheme(meta.category);
+              showResultHeader(meta);
+
+              markdownBuf = textBuf.slice(sep + 2);
+              updateStreamContent(content, markdownBuf, true);
+            } catch(e) {
+              // JSON not yet complete — keep buffering
+            }
+          }
+        } else {
+          markdownBuf += delta;
+          updateStreamContent(content, markdownBuf, true);
+        }
+      }
+    }
+  } catch(err) {
+    showError(`Stream error: ${err.message}`); return;
+  }
+
+  // If we never found the separator, try parsing the whole buffer as JSON + content
+  if (!metaParsed) {
+    const sep = textBuf.indexOf('\n\n');
+    if (sep !== -1) {
+      try {
+        meta = JSON.parse(textBuf.slice(0, sep).trim());
+        markdownBuf = textBuf.slice(sep + 2);
+        applyTheme(meta.category);
+        showResultHeader(meta);
+        lastMeta = meta;
+      } catch { showError('Could not parse experiment data.'); return; }
+    } else {
+      showError('Unexpected response format.'); return;
+    }
+  }
+
+  // Finalize
+  lastMarkdown = markdownBuf;
+  updateStreamContent(content, markdownBuf, false);
+  saveToHistory(meta, markdownBuf);
+  showFinalized(content, 60, 50);
+}
+
+function updateStreamContent(el, markdown, streaming) {
+  el.classList.toggle('streaming', streaming);
+  if (streaming) {
+    el.classList.remove('ready');
+    latestStreamMarkdown = markdown;
+    if (!pendingRender) {
+      pendingRender = true;
+      requestAnimationFrame(() => {
+        el.innerHTML = marked.parse(latestStreamMarkdown);
+        pendingRender = false;
+      });
+    }
+    return;
+  }
+  el.innerHTML = marked.parse(markdown);
+}
+
+function showResultHeader(meta) {
+  const theme = THEMES[meta.category] || THEMES.default;
+
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('error-state').style.display   = 'none';
+  document.getElementById('exp-icon').textContent           = theme.icon;
+  document.getElementById('exp-category-label').textContent = theme.name;
+  document.getElementById('exp-title').textContent          = meta.title || 'Experiment';
+
+  // Difficulty dots
+  const dots = document.getElementById('difficulty-dots').querySelectorAll('span');
+  const diff = Math.max(1, Math.min(5, meta.difficulty || 1));
+  dots.forEach((d,i) => d.classList.toggle('lit', i < diff));
+
+  // Safety banner
+  const safety = (meta.safety || '').trim();
+  const banner = document.getElementById('safety-banner');
+  if (safety && safety.toLowerCase() !== 'no special precautions needed.') {
+    document.getElementById('safety-text').textContent = safety;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+
+  // Hide diagram, reset
+  document.getElementById('diagram-section').style.display = 'none';
+  document.getElementById('diagram-img').style.display     = 'none';
+  document.getElementById('diagram-img').src               = '';
+  document.getElementById('diagram-loading').style.display = 'flex';
+
+  document.getElementById('result-wrapper').style.display = 'block';
+  document.getElementById('output-card').classList.add('themed');
+
+  // Header badge
+  const badge = document.getElementById('category-badge');
+  badge.textContent = theme.name;
+  badge.classList.add('show');
+
+  // Disable action buttons until stream completes
+  document.getElementById('regen-btn').disabled   = true;
+  document.getElementById('copy-btn').disabled    = true;
+  document.getElementById('diagram-btn').disabled = true;
+}
+
+// ════════════════════════════════════════
+// SHARED FINALIZATION
+// ════════════════════════════════════════
+function showFinalized(content, delayBase, delayStep) {
+  makeChecklist(content);
+  ['generate-btn','regen-btn','copy-btn','diagram-btn'].forEach(id => {
+    document.getElementById(id).disabled = false;
+  });
+  Array.from(content.children).forEach((el,i) => {
+    el.style.transitionDelay = `${delayBase + i * delayStep}ms`;
+  });
+  requestAnimationFrame(() => content.classList.add('ready'));
+}
+
+// ════════════════════════════════════════
+// MATERIALS CHECKLIST
+// ════════════════════════════════════════
+function makeChecklist(contentEl) {
+  const h2s = contentEl.querySelectorAll('h2');
+  for (const h2 of h2s) {
+    if (!h2.textContent.toLowerCase().includes('material')) continue;
+    let el = h2.nextElementSibling;
+    while (el && el.tagName !== 'H2') {
+      if (el.tagName === 'UL' || el.tagName === 'OL') {
+        el.querySelectorAll('li').forEach(li => {
+          if (li.querySelector('.material-check')) return;
+          const cb = document.createElement('input');
+          cb.type = 'checkbox'; cb.className = 'material-check';
+          li.prepend(cb); li.classList.add('material-item');
+          cb.addEventListener('change', () => li.classList.toggle('checked', cb.checked));
+        });
+      }
+      el = el.nextElementSibling;
+    }
+    break;
+  }
+}
+
+// ════════════════════════════════════════
+// REGENERATE
+// ════════════════════════════════════════
+function regenerate() { generate(); }
+
+// ════════════════════════════════════════
+// COPY TO CLIPBOARD
+// ════════════════════════════════════════
+async function copyExperiment() {
+  if (!lastMarkdown) return;
+  const title = lastMeta?.title || 'Experiment';
+  const text  = `# ${title}\n\n${lastMarkdown}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.innerHTML = '⎘ Copy'; }, 2000);
+  } catch {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); ta.remove();
+  }
+}
+
+// ════════════════════════════════════════
+// DALL-E ILLUSTRATION
+// ════════════════════════════════════════
+async function generateDiagram() {
+  if (!currentImagePrompt || !apiKey) return;
+  const btn = document.getElementById('diagram-btn');
+  btn.disabled = true; btn.textContent = '🎨 Generating…';
+
+  const section = document.getElementById('diagram-section');
+  section.style.display = 'block';
+  document.getElementById('diagram-loading').style.display = 'flex';
+  document.getElementById('diagram-img').style.display     = 'none';
+  section.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+  try {
+    const resp = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: { 'Authorization':`Bearer ${apiKey}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        model: 'dall-e-3',
+        prompt: `Educational science experiment diagram, clean illustration style, white background, suitable for students: ${currentImagePrompt}`,
+        n: 1, size: '1024x1024', quality: 'standard',
+      }),
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      const url  = data.data?.[0]?.url;
+      if (url) {
+        const img = document.getElementById('diagram-img');
+        img.onload = () => {
+          document.getElementById('diagram-loading').style.display = 'none';
+          img.style.display = 'block';
+        };
+        img.src = url;
+      } else { section.style.display = 'none'; }
+    } else { section.style.display = 'none'; }
+  } catch { section.style.display = 'none'; }
+
+  btn.disabled = false; btn.innerHTML = '🎨 Illustrate';
+}
+
+// ════════════════════════════════════════
+// UI STATES
+// ════════════════════════════════════════
+function showLoading() {
+  const theme = THEMES[currentTheme]||THEMES.default;
+  document.getElementById('output-section').classList.add('visible');
+  document.getElementById('loading-state').style.display = 'flex';
+  document.getElementById('loading-icon').textContent    = theme.loadIcon;
+  document.getElementById('error-state').style.display   = 'none';
+  document.getElementById('result-wrapper').style.display = 'none';
+  document.getElementById('generate-btn').disabled       = true;
+  document.getElementById('output-card').classList.remove('themed');
+  document.getElementById('result-content').classList.remove('ready','streaming');
+  document.getElementById('result-content').innerHTML    = '';
+}
+
+function showError(msg) {
+  document.getElementById('output-section').classList.add('visible');
+  document.getElementById('loading-state').style.display = 'none';
+  const errEl = document.getElementById('error-state');
+  errEl.style.display = 'flex'; errEl.textContent = msg;
+  document.getElementById('result-wrapper').style.display = 'none';
+  document.getElementById('generate-btn').disabled = !apiKey;
+}
+
+// ════════════════════════════════════════
+// HISTORY
+// ════════════════════════════════════════
+const HISTORY_KEY = 'sci-lab-history';
+
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'); } catch { return []; }
+}
+
+function saveToHistory(meta, markdown) {
+  const history = getHistory();
+  history.unshift({
+    id: Date.now(),
+    category:   meta.category,
+    title:      meta.title,
+    difficulty: meta.difficulty,
+    safety:     meta.safety,
+    imagePrompt: currentImagePrompt,
+    grade:      selectedGrade,
+    supplies:   lastSupplies,
+    content:    markdown,
+    ts:         new Date().toISOString(),
+  });
+  const trimmed = history.slice(0, 8);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+  renderHistory(trimmed);
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderHistory(history) {
+  if (!history) history = getHistory();
+  const section = document.getElementById('history-section');
+  const grid    = document.getElementById('history-grid');
+  if (!history.length) { section.style.display='none'; return; }
+  section.style.display = 'block';
+  grid.innerHTML = history.map(h => {
+    const theme = THEMES[h.category]||THEMES.default;
+    const date  = new Date(h.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    const dots  = Array.from({length:5},(_,i)=>`<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:${i<(h.difficulty||1)?'var(--accent)':'var(--border-strong)'};margin-right:2px"></span>`).join('');
+    return `<div class="history-card" onclick="restoreHistory(${h.id})">
+      <div class="history-card-top">
+        <span class="history-card-icon">${theme.icon}</span>
+        <span class="history-card-cat">${theme.name}</span>
+      </div>
+      <div class="history-card-title">${escHtml(h.title)}</div>
+      <div class="history-card-meta">${h.grade} · ${date} · ${dots}</div>
+    </div>`;
+  }).join('');
+}
+
+function restoreHistory(id) {
+  const history = getHistory();
+  const h = history.find(x=>x.id===id);
+  if (!h) return;
+  lastMeta       = h;
+  lastMarkdown   = h.content;
+  lastSupplies   = h.supplies;
+  currentImagePrompt = h.imagePrompt || '';
+  selectedGrade  = h.grade;
+  document.querySelectorAll('.grade-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.grade===h.grade);
+  });
+  document.getElementById('supplies').value = h.supplies;
+
+  showLoading();
+  applyTheme(h.category);
+  showResultHeader(h);
+  const content = document.getElementById('result-content');
+  updateStreamContent(content, h.content, false);
+  showFinalized(content, 40, 40);
+}
+
+function clearHistory() {
+  localStorage.removeItem(HISTORY_KEY);
+  document.getElementById('history-section').style.display = 'none';
+}
+
+// Init
+renderHistory();
+</script>
+</body>
+</html>
