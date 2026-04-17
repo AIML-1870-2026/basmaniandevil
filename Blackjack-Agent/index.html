@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blackjack AI Agent</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<h1>&#9824; Blackjack AI Agent &#9824;</h1>
+
+<!-- API Setup -->
+<div id="api-setup">
+  <h2>Enter API Key</h2>
+  <p>Your OpenAI API key is read in-memory only — never stored, logged, or transmitted beyond the API call.</p>
+  <div class="key-input-row">
+    <input type="password" id="api-key-input" placeholder="sk-…" autocomplete="off" spellcheck="false">
+    <button id="btn-use-key">Use Key</button>
+  </div>
+  <div class="divider">or</div>
+  <label class="upload-btn" for="env-file">&#128194; Upload .env File</label>
+  <input type="file" id="env-file" accept=".env,text/plain" style="display:none">
+  <div id="key-status"></div>
+</div>
+
+<!-- Game Container -->
+<div id="game-container">
+  <div class="game-grid">
+
+    <!-- Left: Table -->
+    <div>
+      <div class="table-section">
+        <div class="hand-label">Dealer's Hand</div>
+        <div id="dealer-total" class="hand-total"></div>
+        <div class="cards-row" id="dealer-cards"></div>
+
+        <div class="hand-label">Your Hand</div>
+        <div id="player-total" class="hand-total"></div>
+        <div class="cards-row" id="player-cards"></div>
+
+        <div id="outcome-msg"></div>
+
+        <div class="controls">
+          <button class="btn btn-gold"  id="btn-new">New Hand</button>
+          <button class="btn btn-ghost" id="btn-hit"    disabled>Hit</button>
+          <button class="btn btn-ghost" id="btn-stand"  disabled>Stand</button>
+          <button class="btn btn-ghost" id="btn-double" disabled>Double</button>
+        </div>
+
+        <div class="chip-row" id="chip-row">
+          <button class="chip" data-val="25">$25</button>
+          <button class="chip" data-val="50">$50</button>
+          <button class="chip" data-val="100">$100</button>
+          <button class="chip" data-val="250">$250</button>
+          <button class="chip chip-max" id="btn-max-bet">Max</button>
+        </div>
+
+        <div class="balance-bar">
+          <div class="bal-item"><div class="lbl">Balance</div><div class="val" id="bal-display">$1,000</div></div>
+          <div class="bal-item">
+            <div class="lbl">Bet</div>
+            <div class="bet-adjuster">
+              <button class="btn-bet-adj" id="btn-bet-down">−</button>
+              <span class="val" id="bet-display">$100</span>
+              <button class="btn-bet-adj" id="btn-bet-up">+</button>
+            </div>
+          </div>
+          <div class="bal-item"><div class="lbl">Hands</div><div class="val" id="hands-display">0</div></div>
+        </div>
+
+        <div class="autoplay-bar">
+          <span class="autoplay-label">&#9654;&#9654; Auto-Play</span>
+          <button class="autoplay-toggle" id="btn-autoplay" aria-pressed="false">
+            <span class="toggle-knob"></span>
+          </button>
+          <span class="autoplay-status" id="autoplay-status">Off</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Sidebar -->
+    <div class="sidebar">
+
+      <!-- AI Panel -->
+      <div class="panel">
+        <h3>&#129302; AI Analysis</h3>
+
+        <div class="toggle-group">
+          <button class="tog active" data-lvl="simple">Simple</button>
+          <button class="tog" data-lvl="standard">Standard</button>
+          <button class="tog" data-lvl="detailed">Detailed</button>
+        </div>
+
+        <div class="advisor-wrap">
+          <div class="advisor-char" id="advisor-char">
+            <div class="char-hat"></div>
+            <div class="char-head">
+              <div class="char-eyebrow left"></div>
+              <div class="char-eyebrow right"></div>
+              <div class="char-eyes">
+                <div class="char-eye"></div>
+                <div class="char-eye"></div>
+              </div>
+              <div class="char-mouth" id="char-mouth"></div>
+            </div>
+            <div class="char-body">
+              <div class="char-bowtie"></div>
+            </div>
+            <div class="char-legs">
+              <div class="char-leg"></div>
+              <div class="char-leg"></div>
+            </div>
+          </div>
+          <div class="speech-bubble">
+            <div id="bubble-idle">Deal a hand and I'll give you my best advice!</div>
+            <div id="bubble-loading" style="display:none">Hmm, let me think about this one…</div>
+            <div id="bubble-content" style="display:none">
+              <div style="margin-bottom:6px">
+                <span id="ai-badge" class="action-badge"></span>
+                <span id="ai-conf"  class="conf-badge"></span>
+              </div>
+              <div id="ai-reasoning"></div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-green" id="btn-execute" disabled style="width:100%;margin-top:4px">&#9654; Execute Recommendation</button>
+      </div>
+
+      <!-- Analytics -->
+      <div class="panel">
+        <h3>&#128200; Analytics</h3>
+        <div class="stat-row"><span class="stat-lbl">Wins</span>      <span class="stat-val" id="s-wins">0</span></div>
+        <div class="stat-row"><span class="stat-lbl">Losses</span>    <span class="stat-val" id="s-losses">0</span></div>
+        <div class="stat-row"><span class="stat-lbl">Pushes</span>    <span class="stat-val" id="s-pushes">0</span></div>
+        <div class="stat-row"><span class="stat-lbl">Win Rate</span>  <span class="stat-val" id="s-winrate">—</span></div>
+        <div class="stat-row"><span class="stat-lbl">Blackjacks</span><span class="stat-val" id="s-bjs">0</span></div>
+        <canvas id="bankroll-chart" width="280" height="72"></canvas>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="blackjack.js"></script>
+</body>
+</html>
