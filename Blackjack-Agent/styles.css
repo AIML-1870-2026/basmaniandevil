@@ -463,6 +463,43 @@ h1 {
 
 #bankroll-chart { width: 100%; height: 72px; margin-top: 12px; border-radius: 6px; }
 
+/* ── Strategy Matrix ───────────────────────────────────────── */
+.matrix-scroll { overflow-x: auto; }
+
+.strat-table {
+  border-collapse: collapse;
+  font-size: 0.62rem;
+  width: 100%;
+}
+.strat-table th, .strat-table td {
+  width: 21px; height: 18px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.strat-table th { background: rgba(0,0,0,0.38); color: #999; font-weight: 600; }
+
+.cH { background: #b71c1c; color: #fff; }
+.cS { background: #0d47a1; color: #fff; }
+.cD { background: #4a148c; color: #fff; }
+
+.hl-current  { outline: 2px solid #ffd700; outline-offset: -2px; }
+.hl-agree    { box-shadow: inset 0 0 0 2px #4caf50; }
+.hl-disagree { box-shadow: inset 0 0 0 2px #f44336; }
+
+.legend {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  align-items: center;
+}
+.leg-item { display: flex; align-items: center; gap: 3px; font-size: 0.68rem; color: #999; }
+.leg-dot  { width: 9px; height: 9px; border-radius: 2px; }
+
+#ai-strat-match { font-size: 0.8rem; margin-bottom: 6px; min-height: 18px; }
+.m-yes { color: #4caf50; }
+.m-no  { color: #ef5350; }
+
 /* ── Betting Controls ──────────────────────────────────────── */
 .chip-row {
   display: flex;

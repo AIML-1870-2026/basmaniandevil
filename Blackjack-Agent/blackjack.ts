@@ -22,6 +22,8 @@ interface Stats {
   losses: number;
   pushes: number;
   bjs: number;
+  aiMatch: number;
+  aiTotal: number;
 }
 
 // ─── DOM Helper ───────────────────────────────────────────────────────────────
@@ -46,7 +48,7 @@ let baseBet               = 100;
 const BET_STEP = 25;
 const BET_MIN  = 25;
 
-const stats: Stats         = { wins: 0, losses: 0, pushes: 0, bjs: 0 };
+const stats: Stats         = { wins: 0, losses: 0, pushes: 0, bjs: 0, aiMatch: 0, aiTotal: 0 };
 let bankrollHistory: number[] = [1000];
 
 // ─── API Key ──────────────────────────────────────────────────────────────────
@@ -56,6 +58,7 @@ function activateKey(key: string): void {
   setTimeout(() => {
     $('api-setup').style.display      = 'none';
     $('game-container').style.display = 'block';
+    buildMatrix();
     renderStats();
   }, 700);
 }
@@ -206,6 +209,7 @@ function renderStats(): void {
   $('s-pushes').textContent  = String(stats.pushes);
   $('s-bjs').textContent     = String(stats.bjs);
   $('s-winrate').textContent = total ? Math.round(stats.wins / total * 100) + '%' : '—';
+  $('s-acc').textContent     = stats.aiTotal ? Math.round(stats.aiMatch / stats.aiTotal * 100) + '%' : '—';
   $('hands-display').textContent = String(total);
   drawChart();
 }
@@ -239,6 +243,91 @@ function drawChart(): void {
   const sy = yFor(hist[0]);
   ctx.moveTo(0, sy); ctx.lineTo(W, sy);
   ctx.stroke(); ctx.setLineDash([]);
+}
+
+// ─── Basic Strategy ───────────────────────────────────────────────────────────
+const DCOLS = ['2','3','4','5','6','7','8','9','10','A'];
+
+const HARD: Record<number, string> = {
+  5:'HHHHHHHHHH', 6:'HHHHHHHHHH', 7:'HHHHHHHHHH', 8:'HHHHHHHHHH',
+  9:'HDHHHHHHHH', 10:'DDDDDDDDHH', 11:'DDDDDDDDDH',
+  12:'HHSSSHHHHH', 13:'SSSSSHHHHH', 14:'SSSSSHHHHH',
+  15:'SSSSSHHHHH', 16:'SSSSSHHHHH',
+  17:'SSSSSSSSSS', 18:'SSSSSSSSSS', 19:'SSSSSSSSSS', 20:'SSSSSSSSSS',
+};
+
+const SOFT: Record<number, string> = {
+  13:'HHHDDHHHHH', 14:'HHHDDHHHHH', 15:'HHHDDHHHH', 16:'HHDDDHHHH',
+  17:'HDDDDHHHHH', 18:'SDDDDSSHHH', 19:'SSSSSSSSSS', 20:'SSSSSSSSSS',
+};
+
+function stratLookup(total: number, dealerRank: string, soft: boolean): string {
+  const key = ['J','Q','K'].includes(dealerRank) ? '10' : dealerRank;
+  const ci  = DCOLS.indexOf(key);
+  if (ci === -1) return 'H';
+  const row = (soft ? SOFT : HARD)[total];
+  if (!row) return total >= 17 ? 'S' : 'H';
+  return row[ci] ?? 'H';
+}
+
+function buildMatrix(): void {
+  const tbl = document.getElementById('strat-table') as HTMLTableElement;
+  tbl.innerHTML = '';
+
+  const htr = tbl.insertRow();
+  htr.insertCell();
+  DCOLS.forEach(c => {
+    const th = document.createElement('th');
+    th.textContent = c;
+    htr.appendChild(th);
+  });
+
+  const addRows = (table: Record<number, string>, label: (t: number) => string, prefix: string) => {
+    Object.keys(table).map(Number).forEach(t => {
+      const tr = tbl.insertRow();
+      const th = document.createElement('th');
+      th.textContent = label(t);
+      tr.appendChild(th);
+      DCOLS.forEach((_, ci) => {
+        const td = tr.insertCell();
+        const a  = table[t][ci];
+        td.className      = 'c' + a;
+        td.textContent    = a;
+        td.dataset['row'] = prefix + t;
+        td.dataset['col'] = String(ci);
+      });
+    });
+  };
+
+  addRows(HARD, t => String(t),       'H');
+  addRows(SOFT, t => 'A/' + (t - 11), 'S');
+}
+
+function highlightMatrix(pTotal: number, dealerRank: string, soft: boolean, aiAction?: string): void {
+  document.querySelectorAll<HTMLElement>('.hl-current,.hl-agree,.hl-disagree').forEach(el =>
+    el.classList.remove('hl-current', 'hl-agree', 'hl-disagree'));
+  $('ai-strat-match').innerHTML = '';
+
+  const key  = ['J','Q','K'].includes(dealerRank) ? '10' : dealerRank;
+  const ci   = DCOLS.indexOf(key);
+  const rk   = (soft ? 'S' : 'H') + pTotal;
+  const cell = document.querySelector<HTMLElement>(`[data-row="${rk}"][data-col="${ci}"]`);
+  if (!cell) return;
+
+  cell.classList.add('hl-current');
+
+  if (aiAction) {
+    const stratLetter = cell.textContent?.trim()[0] ?? '';
+    const aiLetter    = aiAction[0].toUpperCase();
+    const match       = aiLetter === stratLetter;
+    cell.classList.add(match ? 'hl-agree' : 'hl-disagree');
+    stats.aiTotal++;
+    if (match) stats.aiMatch++;
+    $('ai-strat-match').innerHTML = match
+      ? '<span class="m-yes">&#10003; AI agrees with Basic Strategy</span>'
+      : `<span class="m-no">&#10007; AI deviates — Strategy: ${stratLetter}, AI: ${aiAction.toUpperCase()}</span>`;
+    renderStats();
+  }
 }
 
 // ─── Advisor Character ────────────────────────────────────────────────────────
@@ -357,6 +446,10 @@ async function fetchAI(): Promise<void> {
     $('ai-reasoning').textContent = parsed.reasoning;
     setAdvisorState('content', parsed.action);
 
+    const pv   = handValue(playerHand);
+    const soft = isSoft(playerHand);
+    highlightMatrix(pv, dealerHand[1].rank, soft, parsed.action);
+
     const canDouble = playerHand.length === 2 && balance >= bet;
     const actionOk  = parsed.action !== 'double' || canDouble;
     $<HTMLButtonElement>('btn-execute').disabled = gamePhase !== 'player' || !actionOk;
@@ -391,6 +484,9 @@ function newHand(): void {
 
   setAdvisorState('idle');
   $('bubble-idle').textContent = 'Getting my read on this hand…';
+  $('ai-strat-match').innerHTML = '';
+  document.querySelectorAll<HTMLElement>('.hl-current,.hl-agree,.hl-disagree').forEach(el =>
+    el.classList.remove('hl-current', 'hl-agree', 'hl-disagree'));
 
   showOutcome('', '');
   renderHands(true);

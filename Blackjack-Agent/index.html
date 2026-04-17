@@ -77,6 +77,21 @@
           <span class="autoplay-status" id="autoplay-status">Off</span>
         </div>
       </div>
+
+      <!-- Basic Strategy Matrix -->
+      <div class="panel" id="strategy-wrap" style="margin-top:16px;">
+        <h3>&#9733; Basic Strategy Reference</h3>
+        <div id="ai-strat-match"></div>
+        <div class="matrix-scroll">
+          <table class="strat-table" id="strat-table"></table>
+        </div>
+        <div class="legend">
+          <div class="leg-item"><div class="leg-dot cH"></div>Hit</div>
+          <div class="leg-item"><div class="leg-dot cS"></div>Stand</div>
+          <div class="leg-item"><div class="leg-dot cD"></div>Double</div>
+          <div class="leg-item hl-current" style="padding:0 4px;">Current</div>
+        </div>
+      </div>
     </div>
 
     <!-- Right: Sidebar -->
@@ -135,6 +150,7 @@
         <div class="stat-row"><span class="stat-lbl">Pushes</span>    <span class="stat-val" id="s-pushes">0</span></div>
         <div class="stat-row"><span class="stat-lbl">Win Rate</span>  <span class="stat-val" id="s-winrate">—</span></div>
         <div class="stat-row"><span class="stat-lbl">Blackjacks</span><span class="stat-val" id="s-bjs">0</span></div>
+        <div class="stat-row"><span class="stat-lbl">AI Accuracy</span><span class="stat-val" id="s-acc">—</span></div>
         <canvas id="bankroll-chart" width="280" height="72"></canvas>
       </div>
 
