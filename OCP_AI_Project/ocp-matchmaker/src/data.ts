@@ -1,0 +1,175 @@
+import type { Show, FormQuestion } from './types.ts';
+
+export const SHOWS: Show[] = [
+  {
+    id: 'dial-m',
+    title: 'Dial "M" for Murder',
+    dates: 'April 17 – May 10, 2026',
+    startDate: '2026-04-17',
+    endDate: '2026-05-10',
+    venue: 'Hawks Mainstage',
+    venueCapacity: '560-seat proscenium theatre',
+    venueDescription:
+      'The Hawks Mainstage is a grand 560-seat proscenium theatre — OCP\'s primary stage for full-scale productions with a classic theatrical atmosphere.',
+    description:
+      'A perfect crime has been planned to the last detail... but something goes terribly wrong. Based on Frederick Knott\'s classic thriller, Dial "M" for Murder is a gripping tale of murder, deception, and one detective\'s relentless pursuit of the truth. Electrifying suspense from curtain up to curtain down.',
+    contentAdvisory: 'Contains depictions of violence and adult themes. Recommended for ages 14+.',
+    ticketUrl: 'https://ticketomaha.com/',
+    imageUrl: '',
+    specialEvents: ['Talk Back Thursday (April 24)', 'Audio Described Performance (May 3)'],
+    accessibility: ['Audio Description', 'Assistive Listening', 'Accessible Seating'],
+    genres: ['Mystery', 'Thriller', 'Drama'],
+    ageRating: 'adult',
+    isCurrentlyRunning: true,
+  },
+  {
+    id: 'weisenheimers',
+    title: 'The Weisenheimers',
+    dates: 'April 25, 2026 (Special Event)',
+    startDate: '2026-04-25',
+    endDate: '2026-04-25',
+    venue: 'Howard Drew Theatre',
+    venueCapacity: '200-seat black box theatre',
+    venueDescription:
+      'The intimate Howard Drew Theatre is a 200-seat black box space perfect for up-close, immersive comedy and experimental performances.',
+    description:
+      'A one-night-only special event featuring OCP\'s beloved improv comedy troupe, The Weisenheimers. Expect rapid-fire scenes, sharp wit, audience participation, and non-stop laughs from start to finish.',
+    contentAdvisory: 'Family-friendly. May contain mild comedic adult content.',
+    ticketUrl: 'https://ticketomaha.com/',
+    imageUrl: '',
+    specialEvents: ['Post-show meet & greet with performers'],
+    accessibility: ['Assistive Listening', 'Accessible Seating'],
+    genres: ['Comedy', 'Improv', 'Special Event'],
+    ageRating: 'family',
+    isCurrentlyRunning: true,
+  },
+  {
+    id: 'mary-poppins',
+    title: "Cameron Mackintosh and Disney's Mary Poppins",
+    dates: 'May 29 – June 28, 2026',
+    startDate: '2026-05-29',
+    endDate: '2026-06-28',
+    venue: 'Hawks Mainstage',
+    venueCapacity: '560-seat proscenium theatre',
+    venueDescription:
+      'The Hawks Mainstage is a grand 560-seat proscenium theatre — the perfect stage for this full-scale Broadway-style musical spectacle.',
+    description:
+      "The beloved story of the world's most magical nanny comes to life in this spectacular musical. Featuring beloved songs from the classic film plus brand new ones from the original Broadway production. A truly supercalifragilistic experience for the entire family.",
+    contentAdvisory: 'Suitable for all ages. Contains theatrical special effects and flying sequences.',
+    ticketUrl: 'https://ticketomaha.com/',
+    imageUrl: '',
+    specialEvents: [
+      'Sensory-Friendly Performance (June 7)',
+      'Relaxed Performance (June 14)',
+      'Stage & Story Discussion (June 20)',
+    ],
+    accessibility: ['Audio Description', 'Assistive Listening', 'Relaxed Performance', 'Accessible Seating'],
+    genres: ['Musical', 'Family', 'Comedy'],
+    ageRating: 'all-ages',
+    isCurrentlyRunning: false,
+  },
+  {
+    id: 'newsies-jr',
+    title: "Disney's Newsies Jr.",
+    dates: 'June 26–28, 2026',
+    startDate: '2026-06-26',
+    endDate: '2026-06-28',
+    venue: 'Hawks Mainstage',
+    venueCapacity: '560-seat proscenium theatre',
+    venueDescription:
+      'The Hawks Mainstage provides an exciting backdrop for these young performers bringing a rousing Broadway musical to the Omaha community.',
+    description:
+      "Young performers bring this rousing musical to life! Set in New York City in 1899, Newsies Jr. tells the story of a band of brave young newsboys who stand up against an unfair publisher. Full of high-energy dancing, soaring vocals, and an inspiring message.",
+    contentAdvisory: 'Suitable for all ages. Features young performers.',
+    ticketUrl: 'https://ticketomaha.com/',
+    imageUrl: '',
+    specialEvents: [],
+    accessibility: ['Assistive Listening', 'Accessible Seating'],
+    genres: ['Musical', 'Family', 'Youth Production'],
+    ageRating: 'all-ages',
+    isCurrentlyRunning: false,
+  },
+];
+
+export const FORM_QUESTIONS: FormQuestion[] = [
+  {
+    id: 'group',
+    label: 'Who are you bringing tonight?',
+    hint: 'Select the option that best describes your group',
+    type: 'single',
+    options: [
+      { value: 'solo', label: 'Just me', icon: '🎭' },
+      { value: 'date', label: 'Date night', icon: '💑', sub: 'Romantic evening for two' },
+      { value: 'family', label: 'Family with kids', icon: '👨‍👩‍👧', sub: 'Including children' },
+      { value: 'friends', label: 'Friend group', icon: '👥', sub: 'A fun night out' },
+      { value: 'corporate', label: 'Corporate outing', icon: '💼', sub: 'Work group or team' },
+    ],
+  },
+  {
+    id: 'mood',
+    label: "What's the vibe you're going for?",
+    hint: 'Pick the mood that sounds most appealing',
+    type: 'single',
+    options: [
+      { value: 'thriller', label: 'Thrilled & on-edge', icon: '😱', sub: 'Suspense and mystery' },
+      { value: 'comedy', label: 'Laugh-out-loud fun', icon: '😂', sub: 'Light and hilarious' },
+      { value: 'emotional', label: 'Emotionally moved', icon: '🥺', sub: 'Touching and heartfelt' },
+      { value: 'classic', label: 'Something classic', icon: '🎩', sub: 'Timeless storytelling' },
+      { value: 'surprise', label: 'Surprise me', icon: '✨', sub: "I'm open to anything" },
+    ],
+  },
+  {
+    id: 'genres',
+    label: 'Any genre preferences?',
+    hint: 'Select all that appeal to you',
+    type: 'multi',
+    options: [
+      { value: 'musical', label: 'Musical', icon: '🎵' },
+      { value: 'mystery', label: 'Mystery / Thriller', icon: '🔍' },
+      { value: 'drama', label: 'Drama', icon: '🎭' },
+      { value: 'comedy', label: 'Comedy', icon: '😄' },
+      { value: 'family', label: 'Family-friendly', icon: '⭐' },
+    ],
+  },
+  {
+    id: 'ageRange',
+    label: "What's the age range of your group?",
+    type: 'single',
+    options: [
+      { value: 'all-adults', label: 'All adults', icon: '👤' },
+      { value: 'mixed', label: 'Mix of adults & kids', icon: '👨‍👧', sub: 'Various ages' },
+      { value: 'mostly-kids', label: 'Mostly kids', icon: '🧒', sub: 'Child-focused outing' },
+    ],
+  },
+  {
+    id: 'availability',
+    label: 'When are you available?',
+    hint: 'Select all that work for you',
+    type: 'multi',
+    options: [
+      { value: 'weeknight', label: 'Weeknight', icon: '🌙' },
+      { value: 'weekend-evening', label: 'Weekend evening', icon: '🎉' },
+      { value: 'matinee', label: 'Weekend matinee', icon: '☀️', sub: 'Afternoon show' },
+    ],
+  },
+  {
+    id: 'budget',
+    label: 'How are you thinking about budget?',
+    type: 'single',
+    options: [
+      { value: 'value', label: 'Value-conscious', icon: '💚', sub: 'Looking for deals' },
+      { value: 'no-preference', label: 'No preference', icon: '🎟️', sub: "Price isn't a factor" },
+      { value: 'splurge', label: 'Special occasion splurge', icon: '✨', sub: 'Going all out' },
+    ],
+  },
+  {
+    id: 'maturity',
+    label: 'Comfort with mature themes?',
+    type: 'single',
+    options: [
+      { value: 'family-safe', label: 'Family-safe only', icon: '🌟', sub: 'All ages welcome' },
+      { value: 'mild', label: 'Mild adult content OK', icon: '👍', sub: 'Typical PG-13 fare' },
+      { value: 'no-preference', label: 'No preference', icon: '🎭', sub: 'Open to anything' },
+    ],
+  },
+];
