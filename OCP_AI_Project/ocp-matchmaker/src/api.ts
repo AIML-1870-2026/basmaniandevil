@@ -1,7 +1,7 @@
 import type { Message, MatchResult, Show } from './types.ts';
 
-const API_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL = 'claude-haiku-4-5-20251001';
+const API_URL = 'https://api.openai.com/v1/chat/completions';
+const MODEL = 'gpt-4o-mini';
 
 export function buildSystemPrompt(
   shows: Show[],
@@ -64,17 +64,20 @@ Return ONLY a valid JSON object — no markdown fences, no extra text:
 
 async function callApi(
   apiKey: string,
-  body: Record<string, unknown>
+  messages: Array<{ role: string; content: string }>,
+  maxTokens: number
 ): Promise<string> {
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-allow-browser': 'true',
+      'Authorization': `Bearer ${apiKey}`,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: maxTokens,
+      messages,
+    }),
   });
 
   if (!response.ok) {
@@ -82,8 +85,8 @@ async function callApi(
     throw new Error(err.error?.message ?? `API error ${response.status}`);
   }
 
-  const data = await response.json() as { content: Array<{ type: string; text: string }> };
-  return data.content[0]?.text ?? '';
+  const data = await response.json() as { choices: Array<{ message: { content: string } }> };
+  return data.choices[0]?.message?.content ?? '';
 }
 
 export async function sendChatMessage(
@@ -91,12 +94,11 @@ export async function sendChatMessage(
   messages: Message[],
   systemPrompt: string
 ): Promise<string> {
-  return callApi(apiKey, {
-    model: MODEL,
-    max_tokens: 512,
-    system: systemPrompt,
-    messages: messages.map((m) => ({ role: m.role, content: m.content })),
-  });
+  const openAiMessages = [
+    { role: 'system', content: systemPrompt },
+    ...messages.map((m) => ({ role: m.role, content: m.content })),
+  ];
+  return callApi(apiKey, openAiMessages, 512);
 }
 
 export async function getRecommendation(
@@ -107,16 +109,15 @@ export async function getRecommendation(
 ): Promise<MatchResult> {
   const prompt = buildRecommendationPrompt(shows, formAnswers, messages);
 
-  const text = await callApi(apiKey, {
-    model: MODEL,
-    max_tokens: 1024,
-    messages: [{ role: 'user', content: prompt }],
-  });
+  const text = await callApi(
+    apiKey,
+    [{ role: 'user', content: prompt }],
+    1024
+  );
 
   try {
     return JSON.parse(text) as MatchResult;
   } catch {
-    // Strip possible markdown fences Claude occasionally adds
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) return JSON.parse(jsonMatch[0]) as MatchResult;
     throw new Error('Could not parse recommendation. Please try again.');

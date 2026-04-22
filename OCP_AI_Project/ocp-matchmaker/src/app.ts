@@ -104,17 +104,17 @@ function viewApiKey(): string {
         <div class="apikey-card__icon">🔑</div>
         <h2>Enter Your API Key</h2>
         <p>
-          This app uses Claude AI to match you with the perfect show.
-          Enter your Anthropic API key to get started. It's stored only in
-          your browser session and sent exclusively to Anthropic's API.
+          This app uses OpenAI to match you with the perfect show.
+          Enter your OpenAI API key to get started. It's stored only in
+          your browser session and sent exclusively to OpenAI's API.
         </p>
 
         <div class="input-group">
-          <label for="api-key-input">Anthropic API Key</label>
+          <label for="api-key-input">OpenAI API Key</label>
           <input
             type="password"
             id="api-key-input"
-            placeholder="sk-ant-..."
+            placeholder="sk-..."
             value="${esc(state.apiKey)}"
             autocomplete="off"
           />
@@ -126,8 +126,8 @@ function viewApiKey(): string {
 
         <p class="text-muted mt-16 text-sm text-center">
           Get a key at
-          <a href="https://console.anthropic.com" target="_blank" style="color:var(--color-gold)">
-            console.anthropic.com
+          <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--color-gold)">
+            platform.openai.com
           </a>
         </p>
       </div>
